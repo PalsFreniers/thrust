@@ -1,0 +1,9 @@
+addin "std"
+
+1 2 =  dump
+1 2 >  dump
+1 2 <  dump
+1 2 <= dump
+1 2 => dump
+
+EXIT_SUCCESS exit

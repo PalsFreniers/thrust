@@ -1,0 +1,16 @@
+addin "std"
+
+define mod2 2 % 0 = end
+
+mem 0 .
+
+1  2 during <+>  4000000 <= go
+    <+> 2 % 0 = if
+        <+> mem ,64 + mem <> .64
+    end
+    <> <+> +
+end __
+
+mem ,64 dump
+
+EXIT_SUCCESS exit

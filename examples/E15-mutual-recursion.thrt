@@ -1,0 +1,4 @@
+define a macro2 end
+define macro2 a end
+
+a

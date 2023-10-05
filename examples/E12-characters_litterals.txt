@@ -1,0 +1,12 @@
+:i argc 0
+:b stdin 0
+
+:i returncode 0
+:b stdout 176
+Hey!
+ + nasm -felf64 examples/E12-characters_litterals.asm
+ + ld -o examples/E12-characters_litterals examples/E12-characters_litterals.o
+ + examples/E12-characters_litterals 
+
+:b stderr 0
+

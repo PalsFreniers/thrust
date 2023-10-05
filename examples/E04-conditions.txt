@@ -1,0 +1,13 @@
+:i argc 0
+:b stdin 0
+
+:i returncode 0
+:b stdout 135
+1
+0
+ + nasm -felf64 examples/E04-conditions.asm
+ + ld -o examples/E04-conditions examples/E04-conditions.o
+ + examples/E04-conditions 
+
+:b stderr 0
+

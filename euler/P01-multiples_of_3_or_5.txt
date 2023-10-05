@@ -1,0 +1,12 @@
+:i argc 0
+:b stdin 0
+
+:i returncode 0
+:b stdout 162
+233168
+ + nasm -felf64 euler/P01-multiples_of_3_or_5.asm
+ + ld -o euler/P01-multiples_of_3_or_5 euler/P01-multiples_of_3_or_5.o
+ + euler/P01-multiples_of_3_or_5 
+
+:b stderr 0
+

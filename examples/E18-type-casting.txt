@@ -1,0 +1,11 @@
+:i argc 0
+:b stdin 0
+
+:i returncode 0
+:b stdout 148
+3 is even + nasm -felf64 examples/E18-type-casting.asm
+ + ld -o examples/E18-type-casting examples/E18-type-casting.o
+ + examples/E18-type-casting 
+
+:b stderr 0
+

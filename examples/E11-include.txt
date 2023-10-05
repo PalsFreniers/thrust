@@ -1,0 +1,13 @@
+:i argc 0
+:b stdin 0
+
+:i returncode 0
+:b stdout 137
+3
+Hello includes!
+ + nasm -felf64 examples/E11-include.asm
+ + ld -o examples/E11-include examples/E11-include.o
+ + examples/E11-include 
+
+:b stderr 0
+

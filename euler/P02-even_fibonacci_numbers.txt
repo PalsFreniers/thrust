@@ -1,0 +1,12 @@
+:i argc 0
+:b stdin 0
+
+:i returncode 0
+:b stdout 175
+4613732
+ + nasm -felf64 euler/P02-even_fibonacci_numbers.asm
+ + ld -o euler/P02-even_fibonacci_numbers euler/P02-even_fibonacci_numbers.o
+ + euler/P02-even_fibonacci_numbers 
+
+:b stderr 0
+

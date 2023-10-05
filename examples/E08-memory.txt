@@ -1,0 +1,12 @@
+:i argc 0
+:b stdin 0
+
+:i returncode 0
+:b stdout 117
+3
+ + nasm -felf64 examples/E08-memory.asm
+ + ld -o examples/E08-memory examples/E08-memory.o
+ + examples/E08-memory 
+
+:b stderr 0
+

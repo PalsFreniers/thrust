@@ -1,0 +1,10 @@
+addin "std"
+
+2 3 &  dump
+1 2 |  dump
+1 2 ^  dump
+1   ~  dump
+1 2 << dump
+2 1 >> dump
+
+EXIT_SUCCESS exit

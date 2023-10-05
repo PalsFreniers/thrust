@@ -1,0 +1,6 @@
+define strlen
+        0 <> during dup , 0 != go
+                1 + <>
+                1 + <>
+        end _
+end

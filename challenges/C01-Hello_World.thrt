@@ -1,0 +1,15 @@
+define stdout 1 end
+define sys_write 1 end
+define sys_exit 60 end
+
+define exit_success
+    0 sys_exit call1 _
+end
+
+define write
+    stdout sys_write call3
+end
+
+"Hello, World!\n" write _
+
+exit_success

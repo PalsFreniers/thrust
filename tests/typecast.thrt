@@ -1,0 +1,7 @@
+addin "std"
+
+#v #c <+> ,64 dup @ptr strlen <> stdout write _
+
+__
+
+EXIT_SUCCESS exit

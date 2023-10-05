@@ -1,0 +1,9 @@
+addin "std"
+
+mem 0 + 'H' .
+mem 1 + 'e' .
+mem 2 + 'y' .
+mem 3 + '!' .
+mem 4 + 10  .
+
+5 mem puts

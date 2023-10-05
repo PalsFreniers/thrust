@@ -1,0 +1,13 @@
+:i argc 0
+:b stdin 0
+
+:i returncode 0
+:b stdout 146
+3
+this is done with macros
+ + nasm -felf64 examples/E10-defines.asm
+ + ld -o examples/E10-defines examples/E10-defines.o
+ + examples/E10-defines 
+
+:b stderr 0
+

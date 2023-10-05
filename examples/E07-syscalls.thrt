@@ -1,0 +1,7 @@
+addin "std"
+
+mem 65 .
+
+1 mem stdout write _
+
+69 exit

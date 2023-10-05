@@ -1,0 +1,25 @@
+addin "std"
+
+100 during dup 1000 < go
+    100 during dup 1000 < go
+        dup2 *
+        dup 0 during <+> 0 > go
+            10 *
+            <+> 10 % +
+            <> 10 / <>
+        end
+        <> _ 
+        dup2 = if
+            dup mem ,64 > if
+                mem <+> .64
+            end
+        end
+        _ _
+        1 +
+    end _
+    1 +
+end _
+
+mem ,64 dump
+
+EXIT_SUCCESS exit

@@ -1,0 +1,14 @@
+addin "std"
+
+define multiple3 3 % 0 = end
+define multiple5 5 % 0 = end
+
+0 3 during dup 1000 < go
+    dup multiple3 <+> multiple5 | @bool if
+        <> <+> + <>
+    end
+    1 +
+end _
+dump
+
+EXIT_SUCCESS exit

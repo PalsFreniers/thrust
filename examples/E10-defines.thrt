@@ -1,0 +1,23 @@
+addin "std"
+
+define random
+    mem + <> .
+end
+
+define readmem
+    mem + ,
+end
+
+1 0 random
+2 1 random
+
+0 readmem
+1 readmem
+
++
+
+dump
+
+"this is done with macros\n" puts
+
+EXIT_SUCCESS exit

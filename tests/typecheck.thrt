@@ -1,0 +1,24 @@
+addin "std"
+
+1 2 + dump
+2 1 - dump
+2 2 * dump
+2 2 / dump
+2 3 % dump
+
+3 during dup 0 > go
+        dup dump
+        1 -
+end _
+
+1 1 = if
+        "1 is equal to 1\n" stdout write _
+end
+
+1 2 > if
+        "1 is greater than 2\n"
+else
+        "1 is less than 2\n"
+end
+
+stdout write _

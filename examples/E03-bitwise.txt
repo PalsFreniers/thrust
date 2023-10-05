@@ -1,0 +1,17 @@
+:i argc 0
+:b stdin 0
+
+:i returncode 0
+:b stdout 131
+2
+3
+3
+3
+4
+1
+ + nasm -felf64 examples/E03-bitwise.asm
+ + ld -o examples/E03-bitwise examples/E03-bitwise.o
+ + examples/E03-bitwise 
+
+:b stderr 0
+

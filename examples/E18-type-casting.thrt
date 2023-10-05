@@ -1,0 +1,9 @@
+addin "std"
+
+3 2 % @bool if
+        "3 is even" stdout write _
+else
+        "3 is odd" stdout write _
+end
+
+EXIT_SUCCESS exit

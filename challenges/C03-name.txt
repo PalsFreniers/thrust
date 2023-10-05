@@ -1,0 +1,13 @@
+:i argc 0
+:b stdin 7
+Tidian
+
+:i returncode 0
+:b stdout 149
+What is your name ? Hello, Tidian
+ + nasm -felf64 challenges/C03-name.asm
+ + ld -o challenges/C03-name challenges/C03-name.o
+ + challenges/C03-name 
+
+:b stderr 0
+

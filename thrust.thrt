@@ -1,0 +1,272 @@
+addin "std"
+
+// language defines
+define MEM_CAPACITY 1000000 end // 1 MB
+
+// tokens
+define TOK_WORD    0 end
+define TOK_KEYWORD 1 end
+define TOK_INT     2 end
+define TOK_CHAR    3 end
+define TOK_STR     4 end
+
+// operations
+// push operation
+define OP_PUSH     0 end
+define OP_STORESTR 1 end
+// arithmetics
+define OP_PLUS  2  end
+define OP_MINUS 3  end
+define OP_MUL   4  end
+define OP_DIV   5  end
+define OP_MOD   6  end
+define OP_SHR   9  end
+define OP_SHL   10 end
+define OP_AND   11 end
+define OP_OR    12 end
+define OP_XOR   13 end
+define OP_NOT   14 end
+// conditions
+define OP_EQUAL   15 end
+define OP_GREATER 16 end
+define OP_LESS    17 end
+define OP_GEQ     18 end
+define OP_LEQ     19 end
+define OP_NEQ     20 end
+// stack operations
+define OP_DUP    21 end
+define OP_SWAP   22 end
+define OP_ROTATE 23 end
+define OP_OVER   24 end
+define OP_TRASH  25 end
+define OP_DUMP   26 end
+// keywords
+define OP_IF     27 end
+define OP_ELSE   28 end
+define OP_DURING 29 end
+define OP_END    30 end
+define OP_DEFINE 31 end
+define OP_ADDIN  32 end
+define OP_HERE   33 end
+define OP_CALL0  34 end
+define OP_CALL1  35 end
+define OP_CALL2  36 end
+define OP_CALL3  37 end
+define OP_CALL4  38 end
+define OP_CALL5  39 end
+define OP_CALL6  40 end
+// memory
+define OP_MEM        41 end
+define OP_MEMREAD    42 end
+define OP_MEMREAD16  43 end
+define OP_MEMREAD32  44 end
+define OP_MEMREAD64  45 end
+define OP_MEMWRITE   46 end
+define OP_MEMWRITE16 47 end
+define OP_MEMWRITE32 48 end
+define OP_MEMWRITE64 49 end
+// args
+define OP_ARGC 50 end
+define OP_ARGV 51 end
+// type casting
+define OP_CASTINT  52 end
+define OP_CASTPTR  53 end
+define OP_CASTBOOL 54 end
+
+// memory layout
+// putd buff(32) > sim stack count(8)
+// sim stack(1024 * 8) > opcount(8) > ops(left)
+define putd-buff        mem end
+define PUTD_BUFF_CAP    32 end
+define sim-stack-count  putd-buff PUTD_BUFF_CAP + end
+define simulation-stack sim-stack-count 8 + end
+define SIM_STACK_CAP    1024 end
+define ops-count        simulation-stack SIM_STACK_CAP 8 * + end
+define ops              ops-count 8 + end
+define sizeof(Op)       16 end
+// struct Op {
+//         type: u64,
+//         operand: u64,
+// }
+
+// "func" macros
+define todo
+        "[TODO] " stderr write _
+        !?! stderr write _
+        " -> " stderr write _
+        stderr write _
+        1 exit
+end
+
+define error
+        "[ERROR] " stderr write _
+        !?! stderr write _
+        " -> " stderr write _
+        stderr write _
+        1 exit
+end
+
+define putd
+        dup 0 = if
+                "0" puts
+        else
+                putd-buff PUTD_BUFF_CAP +
+                during <+> 0 > go
+                        1 - dup <->
+                        dup 10 / <> 10 %
+                        <-> <> '0' + . <>
+                end
+                dup
+                putd-buff PUTD_BUFF_CAP + <> - <> puts
+        end _
+end
+
+define push-op
+        ops-count ,64 sizeof(Op) * ops +
+        dup 8 + <-> .64
+        <> .64
+        ops-count dup ,64 1 + .64
+end
+
+define print-program
+        0 during dup ops-count ,64 < go
+                "--------------------\n" puts
+                dup sizeof(Op) * ops + 
+                "    Type:    " puts dup ,64 dump
+                "    operand: " puts 8 + ,64 dump
+                1 + 
+        end _
+end
+
+// simulation specific macros
+
+define sim-stack-push
+        sim-stack-count ,64 SIM_STACK_CAP >= if
+                "simulation stack overflow cannot push to full stack\n" error
+        end
+        simulation-stack sim-stack-count ,64 8 * +
+        <> .64
+        sim-stack-count dup ,64 1 + .64
+end
+
+define sim-stack-pop
+        sim-stack-count ,64 0 = if
+                "simulation stack underflow cannot pop from empty stack\n" error
+        end
+        sim-stack-count dup ,64 1 - .64
+        simulation-stack sim-stack-count ,64 8 * +
+        ,64
+end
+
+define simulate-program
+        0 during dup ops-count ,64 < go
+                dup sizeof(Op) * ops +
+                dup ,64 OP_PUSH = if
+                        dup 8 + ,64 sim-stack-push
+                else dup ,64 OP_PLUS = if
+                        sim-stack-pop sim-stack-pop +
+                        sim-stack-push
+                else dup ,64 OP_DUMP = if
+                        sim-stack-pop dump
+                else
+                        "unknown opration unreachable" error
+                end end end _ 
+                1 +
+        end _
+end
+
+// TODO : Finish compilations
+define compile-program
+        "[bits 64] \n" puts
+        "section .text \n" puts
+        ";    -- dump fucntion -- \n" puts
+        "dump: \n" puts
+        "    sub rsp, 40 \n" puts
+        "    mov ecx, 1 \n" puts
+        "    mov r8d, 10 \n" puts
+        "    mov BYTE [rsp+31], 10 \n" puts
+        "    mov rsi, rsp \n" puts
+        "    lea r10, [rsp+31] \n" puts
+        ".L2: \n" puts
+        "    mov rax, rdi \n" puts
+        "    xor edx, edx \n" puts
+        "    mov r9, r10 \n" puts
+        "    div r8 \n" puts
+        "    sub r9, rcx \n" puts
+        "    inc rcx \n" puts
+        "    add edx, 48 \n" puts
+        "    mov BYTE [r9], dl \n" puts
+        "    mov rdx, rdi \n" puts
+        "    mov rdi, rax \n" puts
+        "    cmp rdx, 9 \n" puts
+        "    ja  .L2 \n" puts
+        "    sub rsi, rcx \n" puts
+        "    mov rdx, rcx \n" puts
+        "    mov edi, 1 \n" puts
+        "    add rsi, 32 \n" puts
+        "    mov rax, 1 \n" puts
+        "    syscall \n" puts
+        "    add rsp, 40 \n" puts
+        "    ret \n" puts
+        " \n" puts
+        "global _start \n" puts
+        "_start: \n" puts
+        "    mov [argv], rsp\n" puts
+        0 during dup ops-count ,64 < go
+                dup sizeof(Op) * ops +
+                dup ,64 OP_PUSH = if
+                        ";   -- push " puts dup 8 + ,64 putd " --\n" puts
+                        "    push " puts dup 8 + ,64 putd "\n" puts
+                else dup ,64 OP_PLUS = if
+                        ";   -- plus --\n" puts
+                        "    pop rax\n" puts
+                        "    pop rbx\n" puts
+                        "    add rax, rbx\n" puts
+                        "    push rax\n" puts
+                else dup ,64 OP_MINUS = if
+                        ";   -- minus --\n" puts
+                        "    pop rax\n" puts
+                        "    pop rbx\n" puts
+                        "    sub rbx, rax\n" puts
+                        "    push rax\n" puts
+                else dup ,64 OP_DUMP = if
+                        ";   -- dump --\n" puts
+                        "    pop rdi\n" puts
+                        "    call dump\n" puts
+                else
+                        "unknown opration unreachable" error
+                end end end _ 
+                1 +
+        end _
+        "\n" puts
+        "    mov rdi, 0\n" puts
+        "    mov rax, 60\n" puts
+        "    syscall\n" puts
+        "\n" puts
+        "section .bss\n" puts
+        "    rmem resb " puts MEM_CAPACITY putd "\n" puts
+        "    argv resq 1\n" puts
+end
+
+define prog1
+        OP_PUSH 34 push-op
+        OP_PUSH 35 push-op
+        OP_PLUS 0  push-op
+        OP_DUMP 0  push-op
+end
+
+define prog2
+        OP_PUSH 1 push-op
+        OP_DUMP 0 push-op
+        OP_PUSH 2 push-op
+        OP_DUMP 0 push-op
+        OP_PUSH 3 push-op
+        OP_DUMP 0 push-op
+end
+
+prog1
+
+// compile-program
+simulate-program
+
+EXIT_SUCCESS exit

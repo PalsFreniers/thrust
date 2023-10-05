@@ -1,0 +1,9 @@
+:i argc 0
+:b stdin 0
+
+:i returncode 1
+:b stdout 86
+[ERROR] ./examples/E14-addin-errors.thrt:1:1 -> addin exceeded expansion limit (1000)
+
+:b stderr 0
+

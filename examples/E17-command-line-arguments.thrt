@@ -1,0 +1,11 @@
+addin "std"
+
+#v #c
+during dup 0 > go
+        <+> ,64 @ptr dup strlen <> stdout write _
+        "\n" stdout write _
+        1 -
+        <> 8 + <> 
+end __
+
+EXIT_SUCCESS exit

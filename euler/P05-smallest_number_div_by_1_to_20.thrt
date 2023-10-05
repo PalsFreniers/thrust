@@ -1,0 +1,50 @@
+addin "std"
+
+define N 20 end
+define acc mem end
+define tmp mem 8 N * + end
+define ans tmp 8 N * + end
+
+2 during dup N <= go
+        0 during dup N < go
+                tmp <+> 8 * + 0 .64
+                1 +
+        end _
+        
+        dup 2 during <+> 1 > go
+                dup2 % 0 = if
+                        dup 8 * tmp +
+                        dup ,64 1 + .64
+                        <> <+> / <>
+                else
+                        1 +
+                end
+        end __
+
+        0 during dup N < go
+                dup 8 * acc + ,64
+                <+> 8 * tmp + ,64
+                < if
+                        dup 8 * acc +
+                        <+> 8 * tmp + ,64
+                        .64
+                end
+                1 + 
+        end _
+        1 +
+end _
+
+ans 1 .64
+
+0 during dup N < go
+        acc <+> 8 * + ,64
+        during dup 0 > go
+                <+> ans ,64 * ans <> .64
+                1 -
+        end _
+        1 +
+end _
+
+ans ,64 dump
+
+EXIT_SUCCESS exit

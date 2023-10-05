@@ -1,0 +1,6 @@
+addin "sys/calls"
+addin "io"
+addin "str"
+
+define dup2 <+> <+> end
+define __ _ _ end

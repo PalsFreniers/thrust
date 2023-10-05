@@ -1,0 +1,9 @@
+addin "std"
+
+define test 1 2 + dump end
+
+test
+
+"Hello includes!\n" puts
+
+0 exit

@@ -1,0 +1,12 @@
+:i argc 0
+:b stdin 0
+
+:i returncode 0
+:b stdout 190
+906609
+ + nasm -felf64 euler/P04-largest_palindrome_product.asm
+ + ld -o euler/P04-largest_palindrome_product euler/P04-largest_palindrome_product.o
+ + euler/P04-largest_palindrome_product 
+
+:b stderr 0
+

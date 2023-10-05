@@ -1,0 +1,16 @@
+addin "std"
+
+define print1 1 dump end
+define print0 0 dump end
+1 @bool if
+    print1
+else
+    print0
+end
+
+0 @bool if
+    print1
+else
+    print0
+end
+EXIT_SUCCESS exit

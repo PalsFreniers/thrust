@@ -1,0 +1,15 @@
+addin "std"
+
+define test 30 end
+
+0 during dup test < go
+    dup dump
+    1 +
+end _
+
+test 0 during dup2 > go
+    dup dump
+    1 +
+end _ _
+
+0 exit

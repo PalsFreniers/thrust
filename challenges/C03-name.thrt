@@ -1,0 +1,16 @@
+addin "std"
+
+"What is your name ? " stdout write _
+
+100 mem stdin read
+
+dup 0 <= if
+        "Error during readin name" stderr write _
+        EXIT_FAILURE exit
+end
+
+"Hello, " stdout write _
+
+mem stdout write _
+
+EXIT_SUCCESS exit

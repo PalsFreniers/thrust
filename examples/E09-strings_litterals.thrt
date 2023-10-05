@@ -1,0 +1,6 @@
+addin "std"
+
+"String // test\n" puts // test
+"Second\n Test\n" <> _ 7 <> puts
+
+EXIT_SUCCESS exit

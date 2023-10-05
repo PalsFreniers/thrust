@@ -1,0 +1,20 @@
+addin "std"
+
+#v #c
+during dup 0 > go
+        <+> ,64 dup strlen <> stdout write _
+        "\n" stdout write _
+        1 -
+        <> 8 + <> 
+end
+
+EXIT_SUCCESS exit
+
+//does not work anymore
+// _ during dup 0 > go
+//         dup strlen <>
+//         stdout write _
+//         "\n" stdout write _
+// end
+// 
+// EXIT_SUCCESS exit

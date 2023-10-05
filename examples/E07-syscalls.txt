@@ -1,0 +1,11 @@
+:i argc 0
+:b stdin 0
+
+:i returncode 0
+:b stdout 124
+A + nasm -felf64 examples/E07-syscalls.asm
+ + ld -o examples/E07-syscalls examples/E07-syscalls.o
+ + examples/E07-syscalls 
+
+:b stderr 0
+
