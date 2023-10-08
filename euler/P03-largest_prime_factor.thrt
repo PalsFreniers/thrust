@@ -1,7 +1,7 @@
 addin "std"
 
 600851475143 2 during <+> 1 > go
-    dup2 % 0 = if
+    if dup2 % 0 = go
         <> <+> / <>
     else
         1 +

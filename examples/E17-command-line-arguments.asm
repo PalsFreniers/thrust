@@ -137,7 +137,7 @@ _start:
     pop rbx
     push rax
     push rbx
-;   -- end during go --
+;   -- end --
     jmp .go13
 .go25:
 ;   -- trash --
@@ -206,7 +206,7 @@ _start:
     pop rbx
     push rax
     push rbx
-;   -- end during go --
+;   -- end --
     jmp .go2
 .go43:
 ;   -- trash --

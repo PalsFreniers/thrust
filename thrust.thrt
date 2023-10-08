@@ -107,7 +107,7 @@ define error
 end
 
 define putd
-        dup 0 = if
+        if dup 0 = go
                 "0" puts
         else
                 putd-buff PUTD_BUFF_CAP +
@@ -141,7 +141,7 @@ end
 // simulation specific macros
 
 define sim-stack-push
-        sim-stack-count ,64 SIM_STACK_CAP >= if
+        if sim-stack-count ,64 SIM_STACK_CAP >= go
                 "simulation stack overflow cannot push to full stack\n" error
         end
         simulation-stack sim-stack-count ,64 8 * +
@@ -150,7 +150,7 @@ define sim-stack-push
 end
 
 define sim-stack-pop
-        sim-stack-count ,64 0 = if
+        if sim-stack-count ,64 0 = go
                 "simulation stack underflow cannot pop from empty stack\n" error
         end
         sim-stack-count dup ,64 1 - .64
@@ -161,21 +161,338 @@ end
 define simulate-program
         0 during dup ops-count ,64 < go
                 dup sizeof(Op) * ops +
-                dup ,64 OP_PUSH = if
+                if dup ,64 OP_PUSH = go
                         dup 8 + ,64 sim-stack-push
-                else dup ,64 OP_PLUS = if
+                else if dup ,64 OP_PLUS = go
                         sim-stack-pop sim-stack-pop +
                         sim-stack-push
-                else dup ,64 OP_DUMP = if
+                else if dup ,64 OP_MINUS = go
+                        sim-stack-pop sim-stack-pop -
+                        sim-stack-push
+                else if dup ,64 OP_DUMP = go
                         sim-stack-pop dump
                 else
                         "unknown opration unreachable" error
-                end end end _ 
+                end end end end _ 
                 1 +
         end _
 end
 
 // TODO : Finish compilations
+//             elif op["type"] == OP_DUP:
+//                 f.write(";   -- dup --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    push rax\n")
+//                 f.write("    push rax\n")
+//             elif op["type"] == OP_SWAP:
+//                 f.write(";   -- swap --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    pop rbx\n")
+//                 f.write("    push rax\n")
+//                 f.write("    push rbx\n")
+//             elif op["type"] == OP_ROTATE:
+//                 f.write(";   -- rotate --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    pop rbx\n")
+//                 f.write("    pop rcx\n")
+//                 f.write("    push rbx\n")
+//                 f.write("    push rax\n")
+//                 f.write("    push rcx\n")
+//             elif op["type"] == OP_OVER:
+//                 f.write(";   -- over --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    pop rbx\n")
+//                 f.write("    push rbx\n")
+//                 f.write("    push rax\n")
+//                 f.write("    push rbx\n")
+//             elif op["type"] == OP_PLUS:
+//                 f.write(";   -- plus --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    pop rbx\n")
+//                 f.write("    add rax, rbx\n")
+//                 f.write("    push rax\n")
+//             elif op["type"] == OP_MINUS:
+//                 f.write(";   -- minus --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    pop rbx\n")
+//                 f.write("    sub rbx, rax\n")
+//                 f.write("    push rbx\n")
+//             elif op["type"] == OP_MUL:
+//                 f.write(";   -- multiplication --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    pop rbx\n")
+//                 f.write("    mul rbx\n")
+//                 f.write("    push rax\n")
+//             elif op["type"] == OP_DIV:
+//                 f.write(";   -- division --\n")
+//                 f.write("    xor rdx, rdx\n")
+//                 f.write("    pop rbx\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    div rbx\n")
+//                 f.write("    push rax\n")
+//             elif op["type"] == OP_MOD:
+//                 f.write(";   -- modulo --\n")
+//                 f.write("    xor rdx, rdx\n")
+//                 f.write("    pop rbx\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    div rbx\n")
+//                 f.write("    push rdx\n")
+//             elif op["type"] == OP_EQUAL:
+//                 f.write(";   -- equal --\n")
+//                 f.write("    mov rcx, 0\n")
+//                 f.write("    mov rdx, 1\n")
+//                 f.write("    pop rbx\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    cmp rax, rbx\n")
+//                 f.write("    cmove rcx, rdx\n")
+//                 f.write("    push rcx\n")
+//             elif op["type"] == OP_GREATER:
+//                 f.write(";   -- greater --\n")
+//                 f.write("    mov rcx, 0\n")
+//                 f.write("    mov rdx, 1\n")
+//                 f.write("    pop rbx\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    cmp rax, rbx\n")
+//                 f.write("    cmovg rcx, rdx\n")
+//                 f.write("    push rcx\n")
+//             elif op["type"] == OP_LESS:
+//                 f.write(";   -- less --\n")
+//                 f.write("    mov rcx, 0\n")
+//                 f.write("    mov rdx, 1\n")
+//                 f.write("    pop rbx\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    cmp rax, rbx\n")
+//                 f.write("    cmovl rcx, rdx\n")
+//                 f.write("    push rcx\n")
+//             elif op["type"] == OP_GEQ:
+//                 f.write(";   -- greater or equal --\n")
+//                 f.write("    mov rcx, 0\n")
+//                 f.write("    mov rdx, 1\n")
+//                 f.write("    pop rbx\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    cmp rax, rbx\n")
+//                 f.write("    cmovge rcx, rdx\n")
+//                 f.write("    push rcx\n")
+//             elif op["type"] == OP_LEQ:
+//                 f.write(";   -- less or equal --\n")
+//                 f.write("    mov rcx, 0\n")
+//                 f.write("    mov rdx, 1\n")
+//                 f.write("    pop rbx\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    cmp rax, rbx\n")
+//                 f.write("    cmovle rcx, rdx\n")
+//                 f.write("    push rcx\n")
+//             elif op["type"] == OP_NEQ:
+//                 f.write(";   -- less or equal --\n")
+//                 f.write("    mov rcx, 0\n")
+//                 f.write("    mov rdx, 1\n")
+//                 f.write("    pop rbx\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    cmp rax, rbx\n")
+//                 f.write("    cmovne rcx, rdx\n")
+//                 f.write("    push rcx\n")
+//             elif op["type"] == OP_IF:
+//                 assert len(op) >= 2, "no crossed referenced if error"
+//                 f.write(";   -- if --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    test rax, rax\n")
+//                 f.write("    jz .if%d\n" % op["jmp"])
+//             elif op["type"] == OP_ELSE:
+//                 assert len(op) >= 2, "no crossed referenced else error"
+//                 f.write(";   -- else --\n")
+//                 f.write("    jmp .if%d\n" % op["jmp"])
+//                 f.write(".if%d:\n" % ip)
+//             elif op["type"] == OP_DURING:
+//                 f.write(";   -- during --\n")
+//                 f.write(".go%d:\n" % ip)
+//             elif op["type"] == OP_GO:
+//                 assert "jmp" in op.keys(), "no crossed referenced go error"
+//                 f.write(";   -- go --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    test rax, rax\n")
+//                 f.write("    jz .go%d\n" % op["jmp"])
+//             elif op["type"] == OP_END:
+//                 if "jmp" in op.keys():
+//                     f.write(";   -- end during go --\n")
+//                     f.write("    jmp .go%d\n" % op["jmp"])
+//                     f.write(".go%d:\n" % ip)
+//                 else:
+//                     f.write(";   -- end if else --\n")
+//                     f.write(".if%d:\n" % ip)
+//             elif op["type"] == OP_DUMP:
+//                 f.write(";   -- dump --\n")
+//                 f.write("    pop rdi\n")
+//                 f.write("    call dump\n")
+//             elif op["type"] == OP_TRASH:
+//                 f.write(";   -- trash --\n")
+//                 f.write("    pop rax\n")
+//             elif op["type"] == OP_MEM:
+//                 f.write(";   -- mem --\n")
+//                 f.write("    push rmem\n")
+//             elif op["type"] == OP_MEMREAD:
+//                 f.write(";   -- mem read --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    xor rbx, rbx\n")
+//                 f.write("    mov bl, byte [rax]\n")
+//                 f.write("    push rbx\n")
+//             elif op["type"] == OP_MEMREAD16:
+//                 f.write(";   -- mem read --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    xor rbx, rbx\n")
+//                 f.write("    mov bx, word [rax]\n")
+//                 f.write("    push rbx\n")
+//             elif op["type"] == OP_MEMREAD32:
+//                 f.write(";   -- mem read --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    xor rbx, rbx\n")
+//                 f.write("    mov ebx, dword [rax]\n")
+//                 f.write("    push rbx\n")
+//             elif op["type"] == OP_MEMREAD64:
+//                 f.write(";   -- mem read --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    xor rbx, rbx\n")
+//                 f.write("    mov rbx, qword [rax]\n")
+//                 f.write("    push rbx\n")
+//             elif op["type"] == OP_MEMWRITE:
+//                 f.write(";   -- mem write --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    pop rbx\n")
+//                 f.write("    mov byte [rbx], al\n")
+//             elif op["type"] == OP_MEMWRITE16:
+//                 f.write(";   -- mem write --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    pop rbx\n")
+//                 f.write("    mov word [rbx], ax\n")
+//             elif op["type"] == OP_MEMWRITE32:
+//                 f.write(";   -- mem write --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    pop rbx\n")
+//                 f.write("    mov dword [rbx], eax\n")
+//             elif op["type"] == OP_MEMWRITE64:
+//                 f.write(";   -- mem write --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    pop rbx\n")
+//                 f.write("    mov qword [rbx], rax\n")
+//             elif op["type"] == OP_CALL0:
+//                 f.write(";   -- call --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    syscall\n")
+//                 f.write("    push rax\n")
+//             elif op["type"] == OP_CALL1:
+//                 f.write(";   -- call --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    pop rdi\n")
+//                 f.write("    syscall\n")
+//                 f.write("    push rax\n")
+//             elif op["type"] == OP_CALL2:
+//                 f.write(";   -- call --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    pop rdi\n")
+//                 f.write("    pop rsi\n")
+//                 f.write("    syscall\n")
+//                 f.write("    push rax\n")
+//             elif op["type"] == OP_CALL3:
+//                 f.write(";   -- call --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    pop rdi\n")
+//                 f.write("    pop rsi\n")
+//                 f.write("    pop rdx\n")
+//                 f.write("    syscall\n")
+//                 f.write("    push rax\n")
+//             elif op["type"] == OP_CALL4:
+//                 f.write(";   -- call --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    pop rdi\n")
+//                 f.write("    pop rsi\n")
+//                 f.write("    pop rdx\n")
+//                 f.write("    pop r10\n")
+//                 f.write("    syscall\n")
+//                 f.write("    push rax\n")
+//             elif op["type"] == OP_CALL5:
+//                 f.write(";   -- call --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    pop rdi\n")
+//                 f.write("    pop rsi\n")
+//                 f.write("    pop rdx\n")
+//                 f.write("    pop r10\n")
+//                 f.write("    pop r8 \n")
+//                 f.write("    syscall\n")
+//                 f.write("    push rax\n")
+//             elif op["type"] == OP_CALL6:
+//                 f.write(";   -- call --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    pop rdi\n")
+//                 f.write("    pop rsi\n")
+//                 f.write("    pop rdx\n")
+//                 f.write("    pop r10\n")
+//                 f.write("    pop r8 \n")
+//                 f.write("    pop r9 \n")
+//                 f.write("    syscall\n")
+//                 f.write("    push rax\n")
+//             elif op["type"] == OP_ARGC:
+//                 f.write(";   -- argc --\n")
+//                 f.write("    mov qword rax, [argv]\n")
+//                 f.write("    push qword [rax]\n")
+//             elif op["type"] == OP_ARGV:
+//                 f.write(";   -- argv --\n")
+//                 f.write("    mov qword rax, [argv]\n")
+//                 f.write("    add rax, 8\n")
+//                 f.write("    push rax\n")
+//             elif op["type"] == OP_SHR:
+//                 f.write(";   -- shr --\n")
+//                 f.write("    pop rcx\n")
+//                 f.write("    pop rbx\n")
+//                 f.write("    shr rbx, cl\n")
+//                 f.write("    push rbx\n")
+//             elif op["type"] == OP_SHL:
+//                 f.write(";   -- shr --\n")
+//                 f.write("    pop rcx\n")
+//                 f.write("    pop rbx\n")
+//                 f.write("    shl rbx, cl\n")
+//                 f.write("    push rbx\n")
+//             elif op["type"] == OP_AND:
+//                 f.write(";   -- and --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    pop rbx\n")
+//                 f.write("    and rbx, rax\n")
+//                 f.write("    push rbx\n")
+//             elif op["type"] == OP_OR:
+//                 f.write(";   -- and --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    pop rbx\n")
+//                 f.write("    or rbx, rax\n")
+//                 f.write("    push rbx\n")
+//             elif op["type"] == OP_NOT:
+//                 f.write(";   -- and --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    not rax\n")
+//                 f.write("    push rbx\n")
+//             elif op["type"] == OP_XOR:
+//                 f.write(";   -- and --\n")
+//                 f.write("    pop rax\n")
+//                 f.write("    pop rbx\n")
+//                 f.write("    xor rbx, rax\n")
+//                 f.write("    push rbx\n")
+//             elif op["type"] == OP_STORESTR:
+//                 f.write(";   -- string litteral --\n")
+//                 f.write("    push %d\n" % len(op["value"]))
+//                 f.write("    push str%d\n" % len(strs))
+//                 strs.append(op["value"])
+//             elif op["type"] == OP_HERE:
+//                 v = "%s:%d:%d" % op["loc"]
+//                 f.write(";   -- string litteral --\n")
+//                 f.write("    push %d\n" % len(v))
+//                 f.write("    push str%d\n" % len(strs))
+//                 strs.append(v)
+//             elif op["type"] == OP_CAST_INT:
+//                 f.write(";   -- cast to int --\n")
+//                 pass
+//             elif op["type"] == OP_CAST_PTR:
+//                 f.write(";   -- cast to ptr --\n")
+//                 pass
+//             elif op["type"] == OP_CAST_BOOL:
+//                 f.write(";   -- cast to bool --\n")
+//                 pass
 define compile-program
         "[bits 64] \n" puts
         "section .text \n" puts
@@ -214,28 +531,34 @@ define compile-program
         "    mov [argv], rsp\n" puts
         0 during dup ops-count ,64 < go
                 dup sizeof(Op) * ops +
-                dup ,64 OP_PUSH = if
+                if dup ,64 OP_PUSH = go
                         ";   -- push " puts dup 8 + ,64 putd " --\n" puts
                         "    push " puts dup 8 + ,64 putd "\n" puts
-                else dup ,64 OP_PLUS = if
+                else if dup ,64 OP_PLUS = go
                         ";   -- plus --\n" puts
                         "    pop rax\n" puts
                         "    pop rbx\n" puts
                         "    add rax, rbx\n" puts
                         "    push rax\n" puts
-                else dup ,64 OP_MINUS = if
+                else if dup ,64 OP_MINUS = go
                         ";   -- minus --\n" puts
                         "    pop rax\n" puts
                         "    pop rbx\n" puts
                         "    sub rbx, rax\n" puts
                         "    push rax\n" puts
-                else dup ,64 OP_DUMP = if
+                else if dup ,64 OP_MUL = go
+                        ";   -- minus --\n" puts
+                        "    pop rax\n" puts
+                        "    pop rbx\n" puts
+                        "    mul rbx, rax\n" puts
+                        "    push rax\n" puts
+                else if dup ,64 OP_DUMP = go
                         ";   -- dump --\n" puts
                         "    pop rdi\n" puts
                         "    call dump\n" puts
                 else
                         "unknown opration unreachable" error
-                end end end _ 
+                end end end end end _ 
                 1 +
         end _
         "\n" puts
@@ -246,6 +569,23 @@ define compile-program
         "section .bss\n" puts
         "    rmem resb " puts MEM_CAPACITY putd "\n" puts
         "    argv resq 1\n" puts
+end
+
+define usage
+    "USAGE : " puts #v ,64 @ptr dup strlen <> puts " [OPTION] <SUBCOMMAND> [ARGS]\n" puts
+    "\n" puts
+    "\n" puts
+    "OPTION\n" puts
+    "    -I <directory> xadd one include directory to include directory list\n" puts
+    "    -l <limit>     xset macro depth limit to n (default=1000)\n" puts
+    "    -u             xdisable type checking\n" puts
+    "    -d             xadd debug information\n" puts
+    "\n" puts
+    "\n" puts
+    "SUBCOMMAND\n" puts
+    "    -c [c|r] <file> Compile  the program\n" puts
+    "    -s <file>       Simulate the program\n" puts
+    "    -h              Show this help\n" puts
 end
 
 define prog1
@@ -264,9 +604,30 @@ define prog2
         OP_DUMP 0 push-op
 end
 
-prog1
+define start
+        if #c 2 < go
+                usage
+                "no subcommand provided\n" error
+                1 exit
+        end
+        
+        prog2
 
-// compile-program
-simulate-program
+        #c 1 #nv
 
-EXIT_SUCCESS exit
+        if dup "-s"C streq go
+                simulate-program
+        else if dup "-c"C streq go
+                compile-program
+        else if dup "-h"C streq go
+                usage
+        else
+                usage
+                "unknown subcommand " error
+                1 exit
+        end end end _ _
+
+        EXIT_SUCCESS exit
+end
+
+start

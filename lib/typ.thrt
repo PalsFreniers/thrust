@@ -1,0 +1,4 @@
+define true  1 @bool end
+define false 0 @bool end
+
+define NULL 0 @ptr end

@@ -59,7 +59,8 @@ _start:
 ;   -- go --
     pop rax
     test rax, rax
-    jz .go27
+    jz .go28
+;   -- if --
 ;   -- dup --
     pop rax
     push rax
@@ -116,10 +117,10 @@ _start:
     or rbx, rax
     push rbx
 ;   -- cast to bool --
-;   -- if --
+;   -- go --
     pop rax
     test rax, rax
-    jz .if24
+    jz .go25
 ;   -- swap --
     pop rax
     pop rbx
@@ -141,8 +142,8 @@ _start:
     pop rbx
     push rax
     push rbx
-;   -- end if else --
-.if24:
+;   -- end --
+.go25:
 ;   -- push 1 --
     mov rax, 1
     push rax
@@ -151,9 +152,9 @@ _start:
     pop rbx
     add rax, rbx
     push rax
-;   -- end during go --
+;   -- end --
     jmp .go2
-.go27:
+.go28:
 ;   -- trash --
     pop rax
 ;   -- dump --

@@ -56,7 +56,7 @@ _start:
 ;   -- go --
     pop rax
     test rax, rax
-    jz .go112
+    jz .go114
 ;   -- push 0 --
     mov rax, 0
     push rax
@@ -133,7 +133,7 @@ _start:
     pop rbx
     add rax, rbx
     push rax
-;   -- end during go --
+;   -- end --
     jmp .go7
 .go25:
 ;   -- trash --
@@ -167,7 +167,8 @@ _start:
 ;   -- go --
     pop rax
     test rax, rax
-    jz .go62
+    jz .go63
+;   -- if --
 ;   -- over --
     pop rax
     pop rbx
@@ -197,10 +198,10 @@ _start:
     cmp rax, rbx
     cmove rcx, rdx
     push rcx
-;   -- if --
+;   -- go --
     pop rax
     test rax, rax
-    jz .if58
+    jz .go59
 ;   -- dup --
     pop rax
     push rax
@@ -280,8 +281,8 @@ _start:
     push rax
     push rbx
 ;   -- else --
-    jmp .if61
-.if58:
+    jmp .go62
+.go59:
 ;   -- push 1 --
     mov rax, 1
     push rax
@@ -290,11 +291,11 @@ _start:
     pop rbx
     add rax, rbx
     push rax
-;   -- end if else --
-.if61:
-;   -- end during go --
-    jmp .go29
+;   -- end --
 .go62:
+;   -- end --
+    jmp .go29
+.go63:
 ;   -- trash --
     pop rax
 ;   -- trash --
@@ -303,7 +304,7 @@ _start:
     mov rax, 0
     push rax
 ;   -- during --
-.go66:
+.go67:
 ;   -- dup --
     pop rax
     push rax
@@ -322,85 +323,86 @@ _start:
 ;   -- go --
     pop rax
     test rax, rax
-    jz .go108
-;   -- dup --
-    pop rax
-    push rax
-    push rax
-;   -- push 8 --
-    mov rax, 8
-    push rax
-;   -- multiplication --
-    pop rax
-    pop rbx
-    mul rbx
-    push rax
-;   -- mem --
-    push rmem
-;   -- plus --
-    pop rax
-    pop rbx
-    add rax, rbx
-    push rax
-;   -- mem read --
-    pop rax
-    xor rbx, rbx
-    mov rbx, qword [rax]
-    push rbx
-;   -- over --
-    pop rax
-    pop rbx
-    push rbx
-    push rax
-    push rbx
-;   -- push 8 --
-    mov rax, 8
-    push rax
-;   -- multiplication --
-    pop rax
-    pop rbx
-    mul rbx
-    push rax
-;   -- mem --
-    push rmem
-;   -- push 8 --
-    mov rax, 8
-    push rax
-;   -- push 20 --
-    mov rax, 20
-    push rax
-;   -- multiplication --
-    pop rax
-    pop rbx
-    mul rbx
-    push rax
-;   -- plus --
-    pop rax
-    pop rbx
-    add rax, rbx
-    push rax
-;   -- plus --
-    pop rax
-    pop rbx
-    add rax, rbx
-    push rax
-;   -- mem read --
-    pop rax
-    xor rbx, rbx
-    mov rbx, qword [rax]
-    push rbx
-;   -- less --
-    mov rcx, 0
-    mov rdx, 1
-    pop rbx
-    pop rax
-    cmp rax, rbx
-    cmovl rcx, rdx
-    push rcx
+    jz .go110
 ;   -- if --
+;   -- dup --
+    pop rax
+    push rax
+    push rax
+;   -- push 8 --
+    mov rax, 8
+    push rax
+;   -- multiplication --
+    pop rax
+    pop rbx
+    mul rbx
+    push rax
+;   -- mem --
+    push rmem
+;   -- plus --
+    pop rax
+    pop rbx
+    add rax, rbx
+    push rax
+;   -- mem read --
+    pop rax
+    xor rbx, rbx
+    mov rbx, qword [rax]
+    push rbx
+;   -- over --
+    pop rax
+    pop rbx
+    push rbx
+    push rax
+    push rbx
+;   -- push 8 --
+    mov rax, 8
+    push rax
+;   -- multiplication --
+    pop rax
+    pop rbx
+    mul rbx
+    push rax
+;   -- mem --
+    push rmem
+;   -- push 8 --
+    mov rax, 8
+    push rax
+;   -- push 20 --
+    mov rax, 20
+    push rax
+;   -- multiplication --
+    pop rax
+    pop rbx
+    mul rbx
+    push rax
+;   -- plus --
+    pop rax
+    pop rbx
+    add rax, rbx
+    push rax
+;   -- plus --
+    pop rax
+    pop rbx
+    add rax, rbx
+    push rax
+;   -- mem read --
+    pop rax
+    xor rbx, rbx
+    mov rbx, qword [rax]
+    push rbx
+;   -- less --
+    mov rcx, 0
+    mov rdx, 1
+    pop rbx
+    pop rax
+    cmp rax, rbx
+    cmovl rcx, rdx
+    push rcx
+;   -- go --
     pop rax
     test rax, rax
-    jz .if105
+    jz .go107
 ;   -- dup --
     pop rax
     push rax
@@ -466,8 +468,8 @@ _start:
     pop rax
     pop rbx
     mov qword [rbx], rax
-;   -- end if else --
-.if105:
+;   -- end --
+.go107:
 ;   -- push 1 --
     mov rax, 1
     push rax
@@ -476,9 +478,9 @@ _start:
     pop rbx
     add rax, rbx
     push rax
-;   -- end during go --
-    jmp .go66
-.go108:
+;   -- end --
+    jmp .go67
+.go110:
 ;   -- trash --
     pop rax
 ;   -- push 1 --
@@ -489,9 +491,9 @@ _start:
     pop rbx
     add rax, rbx
     push rax
-;   -- end during go --
+;   -- end --
     jmp .go1
-.go112:
+.go114:
 ;   -- trash --
     pop rax
 ;   -- mem --
@@ -539,7 +541,7 @@ _start:
     mov rax, 0
     push rax
 ;   -- during --
-.go126:
+.go128:
 ;   -- dup --
     pop rax
     push rax
@@ -558,7 +560,7 @@ _start:
 ;   -- go --
     pop rax
     test rax, rax
-    jz .go171
+    jz .go173
 ;   -- mem --
     push rmem
 ;   -- over --
@@ -586,7 +588,7 @@ _start:
     mov rbx, qword [rax]
     push rbx
 ;   -- during --
-.go137:
+.go139:
 ;   -- dup --
     pop rax
     push rax
@@ -605,7 +607,7 @@ _start:
 ;   -- go --
     pop rax
     test rax, rax
-    jz .go167
+    jz .go169
 ;   -- over --
     pop rax
     pop rbx
@@ -707,9 +709,9 @@ _start:
     pop rbx
     sub rbx, rax
     push rbx
-;   -- end during go --
-    jmp .go137
-.go167:
+;   -- end --
+    jmp .go139
+.go169:
 ;   -- trash --
     pop rax
 ;   -- push 1 --
@@ -720,9 +722,9 @@ _start:
     pop rbx
     add rax, rbx
     push rax
-;   -- end during go --
-    jmp .go126
-.go171:
+;   -- end --
+    jmp .go128
+.go173:
 ;   -- trash --
     pop rax
 ;   -- mem --

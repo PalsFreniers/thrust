@@ -70,7 +70,8 @@ _start:
 ;   -- go --
     pop rax
     test rax, rax
-    jz .go27
+    jz .go28
+;   -- if --
 ;   -- over --
     pop rax
     pop rbx
@@ -97,10 +98,10 @@ _start:
     cmp rax, rbx
     cmove rcx, rdx
     push rcx
-;   -- if --
+;   -- go --
     pop rax
     test rax, rax
-    jz .if23
+    jz .go24
 ;   -- over --
     pop rax
     pop rbx
@@ -130,8 +131,8 @@ _start:
     pop rax
     pop rbx
     mov qword [rbx], rax
-;   -- end if else --
-.if23:
+;   -- end --
+.go24:
 ;   -- swap --
     pop rax
     pop rbx
@@ -148,9 +149,9 @@ _start:
     pop rbx
     add rax, rbx
     push rax
-;   -- end during go --
+;   -- end --
     jmp .go5
-.go27:
+.go28:
 ;   -- trash --
     pop rax
 ;   -- trash --

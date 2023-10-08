@@ -1,6 +1,8 @@
 // syscalls numbers
 define sys_read  0 end
 define sys_write 1 end
+define sys_open  2 end
+define sys_close 3 end
 define sys_exit  60 end
 
 // syscall functions
@@ -10,6 +12,14 @@ end
 
 define write
     sys_write call3
+end
+
+define open
+    sys_open call3
+end
+
+define close
+    sys_close call1
 end
 
 define exit

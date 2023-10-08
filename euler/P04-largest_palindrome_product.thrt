@@ -9,8 +9,8 @@ addin "std"
             <> 10 / <>
         end
         <> _ 
-        dup2 = if
-            dup mem ,64 > if
+        if dup2 = go
+            if dup mem ,64 > go
                 mem <+> .64
             end
         end

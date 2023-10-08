@@ -5,7 +5,7 @@ define mod2 2 % 0 = end
 mem 0 .
 
 1  2 during <+>  4000000 <= go
-    <+> 2 % 0 = if
+    if <+> 2 % 0 = go
         <+> mem ,64 + mem <> .64
     end
     <> <+> +

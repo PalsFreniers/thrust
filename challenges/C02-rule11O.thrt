@@ -5,48 +5,47 @@ define boardSize 172 end
 mem boardSize 2 - + 1 . // set the last cell of the board to 1
 
 0 during dup boardSize 2 - < go
-    // print the current line
-    0 during dup boardSize < go
-        dup mem + , // get the value of the board[i][j] (1 or 0)
-        @bool if // check if it is one or zero
-            dup boardSize + mem + '#' . // put a '$' if it's zero
-        else // otherwise
-            dup boardSize + mem + ' ' . // put a ' ' if it's one
+        // print the current line
+        0 during dup boardSize < go
+                if dup mem + , @bool go // get the value of the board[i][j] (1 or 0) and check if it is one or zero
+                        dup boardSize + mem + '#' . // put a '$' if it's zero
+                else // otherwise
+                        dup boardSize + mem + ' ' . // put a ' ' if it's one
+                end
+                1 + // j++
         end
-        1 + // j++
-    end
-    _
-    boardSize dup + mem + 10 .
-    boardSize 1 + mem boardSize + puts // print the character to the screen
-    // int window = (board[0] << 1) | board[1];
-    mem boardSize + // window variable address
-    mem , 1 << // (board[0] << 1)
-    mem 1 + , // board[1]
-    | // or
-    . // store
-    // second for loop
-    0 during dup boardSize 1 - < go
-        // window = board[j+1] | window;
-        dup 1 + // j + 1
-        mem + , // board[j+1]
-        mem boardSize + , // window
-        1 << 7 &
-        | // |
-        mem boardSize + // memory addresse to where to store the window
-        <> // swap the two elements of the stack
+        _
+        boardSize dup + mem + 10 .
+        boardSize 1 + mem boardSize + puts // print the character to the screen
+        // int window = (board[0] << 1) | board[1];
+        mem boardSize + // window variable address
+        mem , 1 << // (board[0] << 1)
+        mem 1 + , // board[1]
+        | // or
         . // store
-        // stack pointer in the loop = 2 (should normally be 2)
-        // board[j] = 
-        dup mem + // addr of board[j]
-        110 // 110 arbitrary rule byte
-        mem boardSize + , // putting window onto the stack
-        >> // 110 >> window
-        1 & // & 1
-        . // store
-        1 + // j++
-    end
-    _ // remove noise
-    1 + // i++
+        // second for loop
+        0 during dup boardSize 1 - < go
+                // window = board[j+1] | window;
+                dup 1 + // j + 1
+                mem + , // board[j+1]
+                mem boardSize + , // window
+                1 << 7 &
+                | // |
+                mem boardSize + // memory addresse to where to store the window
+                <> // swap the two elements of the stack
+                . // store
+                // stack pointer in the loop = 2 (should normally be 2)
+                // board[j] = 
+                dup mem + // addr of board[j]
+                110 // 110 arbitrary rule byte
+                mem boardSize + , // putting window onto the stack
+                >> // 110 >> window
+                1 & // & 1
+                . // store
+                1 + // j++
+        end
+        _ // remove noise
+        1 + // i++
 end
 _ // remove noise
 

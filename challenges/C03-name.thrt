@@ -4,7 +4,7 @@ addin "std"
 
 100 mem stdin read
 
-dup 0 <= if
+if dup 0 <= go
         "Error during readin name" stderr write _
         EXIT_FAILURE exit
 end

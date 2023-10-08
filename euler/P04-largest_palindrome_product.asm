@@ -56,7 +56,7 @@ _start:
 ;   -- go --
     pop rax
     test rax, rax
-    jz .go57
+    jz .go59
 ;   -- push 100 --
     mov rax, 100
     push rax
@@ -80,7 +80,7 @@ _start:
 ;   -- go --
     pop rax
     test rax, rax
-    jz .go53
+    jz .go55
 ;   -- over --
     pop rax
     pop rbx
@@ -175,7 +175,7 @@ _start:
     pop rbx
     push rax
     push rbx
-;   -- end during go --
+;   -- end --
     jmp .go17
 .go32:
 ;   -- swap --
@@ -185,6 +185,7 @@ _start:
     push rbx
 ;   -- trash --
     pop rax
+;   -- if --
 ;   -- over --
     pop rax
     pop rbx
@@ -205,10 +206,11 @@ _start:
     cmp rax, rbx
     cmove rcx, rdx
     push rcx
-;   -- if --
+;   -- go --
     pop rax
     test rax, rax
-    jz .if48
+    jz .go50
+;   -- if --
 ;   -- dup --
     pop rax
     push rax
@@ -228,10 +230,10 @@ _start:
     cmp rax, rbx
     cmovg rcx, rdx
     push rcx
-;   -- if --
+;   -- go --
     pop rax
     test rax, rax
-    jz .if47
+    jz .go49
 ;   -- mem --
     push rmem
 ;   -- over --
@@ -244,10 +246,10 @@ _start:
     pop rax
     pop rbx
     mov qword [rbx], rax
-;   -- end if else --
-.if47:
-;   -- end if else --
-.if48:
+;   -- end --
+.go49:
+;   -- end --
+.go50:
 ;   -- trash --
     pop rax
 ;   -- trash --
@@ -260,9 +262,9 @@ _start:
     pop rbx
     add rax, rbx
     push rax
-;   -- end during go --
+;   -- end --
     jmp .go7
-.go53:
+.go55:
 ;   -- trash --
     pop rax
 ;   -- push 1 --
@@ -273,9 +275,9 @@ _start:
     pop rbx
     add rax, rbx
     push rax
-;   -- end during go --
+;   -- end --
     jmp .go1
-.go57:
+.go59:
 ;   -- trash --
     pop rax
 ;   -- mem --

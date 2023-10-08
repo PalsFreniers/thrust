@@ -33,6 +33,7 @@ dump:
 global _start
 _start:
     mov [argv], rsp
+;   -- if --
 ;   -- push 3 --
     mov rax, 3
     push rax
@@ -46,10 +47,10 @@ _start:
     div rbx
     push rdx
 ;   -- cast to bool --
-;   -- if --
+;   -- go --
     pop rax
     test rax, rax
-    jz .if10
+    jz .go11
 ;   -- string litteral --
     push 9
     push str0
@@ -69,8 +70,8 @@ _start:
 ;   -- trash --
     pop rax
 ;   -- else --
-    jmp .if16
-.if10:
+    jmp .go17
+.go11:
 ;   -- string litteral --
     push 8
     push str1
@@ -89,8 +90,8 @@ _start:
     push rax
 ;   -- trash --
     pop rax
-;   -- end if else --
-.if16:
+;   -- end --
+.go17:
 ;   -- push 0 --
     mov rax, 0
     push rax

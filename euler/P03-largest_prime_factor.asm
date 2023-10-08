@@ -61,7 +61,8 @@ _start:
 ;   -- go --
     pop rax
     test rax, rax
-    jz .go21
+    jz .go22
+;   -- if --
 ;   -- over --
     pop rax
     pop rbx
@@ -91,10 +92,10 @@ _start:
     cmp rax, rbx
     cmove rcx, rdx
     push rcx
-;   -- if --
+;   -- go --
     pop rax
     test rax, rax
-    jz .if17
+    jz .go18
 ;   -- swap --
     pop rax
     pop rbx
@@ -118,8 +119,8 @@ _start:
     push rax
     push rbx
 ;   -- else --
-    jmp .if20
-.if17:
+    jmp .go21
+.go18:
 ;   -- push 1 --
     mov rax, 1
     push rax
@@ -128,11 +129,11 @@ _start:
     pop rbx
     add rax, rbx
     push rax
-;   -- end if else --
-.if20:
-;   -- end during go --
-    jmp .go2
+;   -- end --
 .go21:
+;   -- end --
+    jmp .go2
+.go22:
 ;   -- dump --
     pop rdi
     call dump

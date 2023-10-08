@@ -69,6 +69,7 @@ _start:
     pop rdx
     syscall
     push rax
+;   -- if --
 ;   -- dup --
     pop rax
     push rax
@@ -84,10 +85,10 @@ _start:
     cmp rax, rbx
     cmovle rcx, rdx
     push rcx
-;   -- if --
+;   -- go --
     pop rax
     test rax, rax
-    jz .if23
+    jz .go24
 ;   -- string litteral --
     push 24
     push str1
@@ -119,8 +120,8 @@ _start:
     push rax
 ;   -- trash --
     pop rax
-;   -- end if else --
-.if23:
+;   -- end --
+.go24:
 ;   -- string litteral --
     push 7
     push str2

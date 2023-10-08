@@ -33,14 +33,15 @@ dump:
 global _start
 _start:
     mov [argv], rsp
+;   -- if --
 ;   -- push 1 --
     mov rax, 1
     push rax
 ;   -- cast to bool --
-;   -- if --
+;   -- go --
     pop rax
     test rax, rax
-    jz .if5
+    jz .go6
 ;   -- push 1 --
     mov rax, 1
     push rax
@@ -48,24 +49,25 @@ _start:
     pop rdi
     call dump
 ;   -- else --
-    jmp .if8
-.if5:
+    jmp .go9
+.go6:
 ;   -- push 0 --
     mov rax, 0
     push rax
 ;   -- dump --
     pop rdi
     call dump
-;   -- end if else --
-.if8:
+;   -- end --
+.go9:
+;   -- if --
 ;   -- push 0 --
     mov rax, 0
     push rax
 ;   -- cast to bool --
-;   -- if --
+;   -- go --
     pop rax
     test rax, rax
-    jz .if14
+    jz .go16
 ;   -- push 1 --
     mov rax, 1
     push rax
@@ -73,16 +75,16 @@ _start:
     pop rdi
     call dump
 ;   -- else --
-    jmp .if17
-.if14:
+    jmp .go19
+.go16:
 ;   -- push 0 --
     mov rax, 0
     push rax
 ;   -- dump --
     pop rdi
     call dump
-;   -- end if else --
-.if17:
+;   -- end --
+.go19:
 ;   -- push 0 --
     mov rax, 0
     push rax

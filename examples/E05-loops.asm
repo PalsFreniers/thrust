@@ -72,7 +72,7 @@ _start:
     pop rbx
     add rax, rbx
     push rax
-;   -- end during go --
+;   -- end --
     jmp .go1
 .go10:
 ;   -- trash --
@@ -124,7 +124,7 @@ _start:
     pop rbx
     add rax, rbx
     push rax
-;   -- end during go --
+;   -- end --
     jmp .go14
 .go23:
 ;   -- trash --

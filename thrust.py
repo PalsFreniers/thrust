@@ -32,7 +32,6 @@ MEM_CAPACITY = 1_000_000  # 1 MB
 STR_CAPACITY = 1_000_000  # 1 MB
 ARG_CAPACITY = 1_000_000  # 1 MB
 
-
 OP_PUSH = iota(True)
 OP_DUP = iota()
 OP_SWAP = iota()
@@ -51,6 +50,7 @@ OP_LEQ = iota()
 OP_NEQ = iota()
 OP_IF = iota()
 OP_ELSE = iota()
+# OP_ELIF = iota()
 OP_DURING = iota()
 OP_GO = iota()
 OP_END = iota()
@@ -81,6 +81,7 @@ OP_XOR = iota()
 OP_ARGC = iota()
 OP_ARGV = iota()
 OP_STORESTR = iota()
+OP_STORECSTR = iota()
 OP_DEFINE = iota()
 OP_ADDIN = iota()
 OP_CAST_PTR = iota()
@@ -88,10 +89,68 @@ OP_CAST_BOOL = iota()
 OP_CAST_INT = iota()
 OP_HERE = iota()
 COUNT_OP = iota()
+operations = {
+    OP_PUSH      : "push_int",
+    OP_DUP       : "dup",
+    OP_SWAP      : "swap",
+    OP_ROTATE    : "rotate",
+    OP_OVER      : "over",
+    OP_PLUS      : "plus",
+    OP_MINUS     : "minus",
+    OP_MUL       : "mul",
+    OP_DIV       : "div",
+    OP_MOD       : "mod",
+    OP_EQUAL     : "equal",
+    OP_GREATER   : "greater",
+    OP_LESS      : "less",
+    OP_GEQ       : "geq",
+    OP_LEQ       : "leq",
+    OP_NEQ       : "neq",
+    OP_IF        : "if",
+    OP_ELSE      : "else",
+    OP_DURING    : "during",
+    OP_GO        : "go",
+    OP_END       : "end",
+    OP_DUMP      : "dump",
+    OP_TRASH     : "trash",
+    OP_MEM       : "mem",
+    OP_MEMREAD   : "memread",
+    OP_MEMREAD16 : "memread16",
+    OP_MEMREAD32 : "memread32",
+    OP_MEMREAD64 : "memread64",
+    OP_MEMWRITE  : "memwrite",
+    OP_MEMWRITE16: "memwrite16",
+    OP_MEMWRITE32: "memwrite32",
+    OP_MEMWRITE64: "memwrite64",
+    OP_CALL0     : "call0",
+    OP_CALL1     : "call1",
+    OP_CALL2     : "call2",
+    OP_CALL3     : "call3",
+    OP_CALL4     : "call4",
+    OP_CALL5     : "call5",
+    OP_CALL6     : "call6",
+    OP_SHR       : "shr",
+    OP_SHL       : "shl",
+    OP_AND       : "and",
+    OP_OR        : "or",
+    OP_NOT       : "not",
+    OP_XOR       : "xor",
+    OP_ARGC      : "argc",
+    OP_ARGV      : "argv",
+    OP_STORESTR  : "push_str",
+    OP_STORECSTR : "push_cstr",
+    OP_DEFINE    : "define",
+    OP_ADDIN     : "addin",
+    OP_CAST_PTR  : "cast_ptr",
+    OP_CAST_BOOL : "cast_bool",
+    OP_CAST_INT  : "cast_int",
+    OP_HERE      : "here",
+}
 
 TOK_WORD = iota(True)
 TOK_INT = iota()
 TOK_STR = iota()
+TOK_CSTR = iota()
 TOK_CHAR = iota()
 COUNT_TOK = iota()
 
@@ -121,7 +180,7 @@ def typecheck(program):
     save_stack = []
     for ip in range(len(program)):
         op = program[ip]
-        assert COUNT_OP == 54, "Missing operation in type checking"
+        assert COUNT_OP == 55, "Missing operation in type checking"
         assert len(Types) == 3, "Missing Types in type checking"
         if   op["type"] == OP_PUSH:
             stack.append((Types.Int, op["loc"]))
@@ -339,19 +398,10 @@ def typecheck(program):
                 compiler_diagnostic_expand(op["token"])
                 exit(1)
         elif op["type"] == OP_IF:
-            if(len(stack) < 1):
-                print("[ERROR] %s:%d:%d -> not enough argument \n\tif operation need 1 but found %d" % (op["loc"] + (len(stack), )))
-                compiler_diagnostic_expand(op["token"])
-                exit(1)
-            at, al = stack.pop()
-            if at != Types.Bool:
-                print("[ERROR] %s:%d:%d -> bad arguments \n\tif operation need Types.Bool argument but got %s at %s:%d:%d" % (op["loc"] + (at, ) + al))
-                compiler_diagnostic_expand(op["token"])
-                exit(1)
             save_stack.append((copy(stack), op["type"]))
         elif op["type"] == OP_ELSE:
             snap, snapt = save_stack.pop()
-            assert snapt == OP_IF, "Compile error unreachable"
+            assert snapt == OP_GO, "Compile error unreachable"
             save_stack.append((copy(stack), op["type"]))
             stack = snap
         elif op["type"] == OP_DURING:
@@ -367,12 +417,12 @@ def typecheck(program):
                 compiler_diagnostic_expand(op["token"])
                 exit(1)
             snap, snapt = save_stack.pop()
-            assert snapt == OP_DURING, "Compile error unreachable"
+            assert snapt == OP_DURING or snapt == OP_IF, "Compile error unreachable"
             snat = list(map(lambda x: x[0], snap))
             actt  = list(map(lambda x: x[0], stack))
             if not snat == actt:
-                print("[ERROR] %s:%d:%d -> modified stack founded after the condition of during-go block" % op["loc"])
-                print("[NOTE] %s:%d:%d -> expected : %s" % (op["loc"] + (snapt, )))
+                print("[ERROR] %s:%d:%d -> modified stack founded after the condition of go block" % op["loc"])
+                print("[NOTE] %s:%d:%d -> expected : %s" % (op["loc"] + (snat, )))
                 print("[NOTE] %s:%d:%d -> actual   : %s" % (op["loc"] + (actt, )))
                 compiler_diagnostic_expand(op["token"])
                 exit(1)
@@ -381,14 +431,7 @@ def typecheck(program):
             snap, snap_block = save_stack.pop()
             snapt = list(map(lambda x: x[0], snap))
             actt  = list(map(lambda x: x[0], stack))
-            if snap_block == OP_IF:
-                if not snapt == actt:
-                    print("[ERROR] %s:%d:%d -> modified stack founded at the end of else-less if block" % op["loc"])
-                    print("[NOTE] %s:%d:%d -> expected : %s" % (op["loc"] + (snapt, )))
-                    print("[NOTE] %s:%d:%d -> actual   : %s" % (op["loc"] + (actt, )))
-                    compiler_diagnostic_expand(op["token"])
-                    exit(1)
-            elif snap_block == OP_ELSE:
+            if snap_block == OP_ELSE:
                 if not snapt == actt:
                     print("[ERROR] %s:%d:%d -> stack error founded at the end of if else block if-else need to modify the stack the same way in both blocks" % op["loc"])
                     print("[NOTE] %s:%d:%d -> expected : %s" % (op["loc"] + (snapt, )))
@@ -714,6 +757,8 @@ def typecheck(program):
         elif op["type"] == OP_STORESTR:
             stack.append((Types.Int, op["loc"]))
             stack.append((Types.Ptr, op["loc"]))
+        elif op["type"] == OP_STORECSTR:
+            stack.append((Types.Ptr, op["loc"]))
         elif op["type"] == OP_CAST_PTR:
             if(len(stack) < 1):
                 print("[ERROR] %s:%d:%d -> not enough argument \n\tcast operation need 1 but found %d" % (op["loc"] + (len(stack), )))
@@ -773,7 +818,7 @@ def simulate(program, argv, dmpMem=False, count=0):
         assert argc * 8 <= ARG_CAPACITY, "Argv buffer overflow"
     while ip < len(program):
         op = program[ip]
-        assert COUNT_OP == 54, "Missing operation in simulation switch"
+        assert COUNT_OP == 55, "Missing operation in simulation switch"
         if op["type"] == OP_PUSH:
             stack.append(op["value"])
         elif op["type"] == OP_DUP:
@@ -843,10 +888,7 @@ def simulate(program, argv, dmpMem=False, count=0):
             a = stack.pop()
             stack.append(int(a != b))
         elif op["type"] == OP_IF:
-            a = stack.pop()
-            if a == 0:
-                assert "jmp" in op.keys(), "no crossed referenced if error"
-                ip = op["jmp"]
+            pass
         elif op["type"] == OP_ELSE:
             assert "jmp" in op.keys(), "no crossed referenced else error"
             ip = op["jmp"]
@@ -854,11 +896,11 @@ def simulate(program, argv, dmpMem=False, count=0):
             pass
         elif op["type"] == OP_GO:
             a = stack.pop()
-            assert len(op) >= 2, "no crossed referenced during go error"
+            assert "jmp" in op.keys() , "no crossed referenced during go error"
             if a == 0:
                 ip = op["jmp"]
         elif op["type"] == OP_END:
-            if "jmp" in op.keys():
+            if op["jmp"] != ip:
                 ip = op["jmp"]
         elif op["type"] == OP_DUMP:
             a = stack.pop()
@@ -872,29 +914,47 @@ def simulate(program, argv, dmpMem=False, count=0):
             stack.append(rmem[addr])
         elif op["type"] == OP_MEMREAD16:
             addr = stack.pop()
-            stack.append(rmem[addr])
+            _bytes = bytearray(2)
+            for offset in range(0,2):
+                _bytes[offset] = rmem[addr + offset]
+            stack.append(int.from_bytes(_bytes, byteorder="little"))
         elif op["type"] == OP_MEMREAD32:
             addr = stack.pop()
-            stack.append(rmem[addr])
+            _bytes = bytearray(4)
+            for offset in range(0,4):
+                _bytes[offset] = rmem[addr + offset]
+            stack.append(int.from_bytes(_bytes, byteorder="little"))
         elif op["type"] == OP_MEMREAD64:
             addr = stack.pop()
-            stack.append(rmem[addr])
+            _bytes = bytearray(8)
+            for offset in range(0,8):
+                _bytes[offset] = rmem[addr + offset]
+            stack.append(int.from_bytes(_bytes, byteorder="little"))
         elif op["type"] == OP_MEMWRITE:
             a = stack.pop()
             addr = stack.pop()
             rmem[addr] = a & 0xFF
         elif op["type"] == OP_MEMWRITE16:
-            a = stack.pop()
-            addr = stack.pop()
-            rmem[addr] = a & 0xFFFF
+            store_value = stack.pop()
+            store_value64 = store_value.to_bytes(length=2, byteorder="little", signed=(store_value < 0))
+            store_addr64 = stack.pop();
+            for byte in store_value64:
+                rmem[store_addr64] = byte;
+                store_addr64 += 1;
         elif op["type"] == OP_MEMWRITE32:
-            a = stack.pop()
-            addr = stack.pop()
-            rmem[addr] = a & 0xFFFFFFFF
+            store_value = stack.pop()
+            store_value64 = store_value.to_bytes(length=4, byteorder="little", signed=(store_value < 0))
+            store_addr64 = stack.pop();
+            for byte in store_value64:
+                rmem[store_addr64] = byte;
+                store_addr64 += 1;
         elif op["type"] == OP_MEMWRITE64:
-            a = stack.pop()
-            addr = stack.pop()
-            rmem[addr] = a & 0xFFFFFFFFFFFFFFFF
+            store_value = stack.pop()
+            store_value64 = store_value.to_bytes(length=8, byteorder="little", signed=(store_value < 0))
+            store_addr64 = stack.pop();
+            for byte in store_value64:
+                rmem[store_addr64] = byte;
+                store_addr64 += 1;
         elif op["type"] == OP_CALL0:
             call = stack.pop()
             if call == 39:
@@ -969,6 +1029,17 @@ def simulate(program, argv, dmpMem=False, count=0):
                 strSize += n
                 assert strSize <= STR_CAPACITY, "String Mem overflow"
             stack.append(strptrs[ip])
+        elif op["type"] == OP_STORECSTR:
+            bs = bytes(op["value"], "utf-8") + b'\0'
+            n = len(bs)
+            stack.append(n)
+            if ip not in strptrs:
+                str_ptr = strptr+strSize
+                strptrs[ip] = str_ptr
+                rmem[str_ptr:str_ptr+n] = bs
+                strSize += n
+                assert strSize <= STR_CAPACITY, "String Mem overflow"
+            stack.append(strptrs[ip])
         elif op["type"] == OP_HERE:
             bs = bytes("%s:%d:%d" % op["loc"], "utf-8")
             n = len(bs)
@@ -1032,7 +1103,7 @@ def cmpile(program, outfilePath):
         strs = []
         for ip in range(len(program)):
             op = program[ip]
-            assert COUNT_OP == 54, "Missing operation in compile switch"
+            assert COUNT_OP == 55, "Missing operation in compile switch"
             if op["type"] == OP_PUSH:
                 f.write(";   -- push %d --\n" % op["value"])
                 f.write("    mov rax, %d\n" % op["value"])
@@ -1150,16 +1221,12 @@ def cmpile(program, outfilePath):
                 f.write("    cmovne rcx, rdx\n")
                 f.write("    push rcx\n")
             elif op["type"] == OP_IF:
-                assert len(op) >= 2, "no crossed referenced if error"
                 f.write(";   -- if --\n")
-                f.write("    pop rax\n")
-                f.write("    test rax, rax\n")
-                f.write("    jz .if%d\n" % op["jmp"])
             elif op["type"] == OP_ELSE:
-                assert len(op) >= 2, "no crossed referenced else error"
+                assert "jmp" in op.keys(), "no crossed referenced else error"
                 f.write(";   -- else --\n")
-                f.write("    jmp .if%d\n" % op["jmp"])
-                f.write(".if%d:\n" % ip)
+                f.write("    jmp .go%d\n" % op["jmp"])
+                f.write(".go%d:\n" % ip)
             elif op["type"] == OP_DURING:
                 f.write(";   -- during --\n")
                 f.write(".go%d:\n" % ip)
@@ -1170,13 +1237,11 @@ def cmpile(program, outfilePath):
                 f.write("    test rax, rax\n")
                 f.write("    jz .go%d\n" % op["jmp"])
             elif op["type"] == OP_END:
-                if "jmp" in op.keys():
-                    f.write(";   -- end during go --\n")
+                assert "jmp" in op.keys(), "no crossed referenced end error"
+                f.write(";   -- end --\n")
+                if op["jmp"] != ip:
                     f.write("    jmp .go%d\n" % op["jmp"])
-                    f.write(".go%d:\n" % ip)
-                else:
-                    f.write(";   -- end if else --\n")
-                    f.write(".if%d:\n" % ip)
+                f.write(".go%d:\n" % ip)
             elif op["type"] == OP_DUMP:
                 f.write(";   -- dump --\n")
                 f.write("    pop rdi\n")
@@ -1332,16 +1397,23 @@ def cmpile(program, outfilePath):
                 f.write("    xor rbx, rax\n")
                 f.write("    push rbx\n")
             elif op["type"] == OP_STORESTR:
+                val = bytes(op["value"], "utf-8")
                 f.write(";   -- string litteral --\n")
                 f.write("    push %d\n" % len(op["value"]))
                 f.write("    push str%d\n" % len(strs))
-                strs.append(op["value"])
+                strs.append(val)
+            elif op["type"] == OP_STORECSTR:
+                val = bytes(op["value"], "utf-8") + b'\0'
+                f.write(";   -- string c litteral --\n")
+                f.write("    push str%d\n" % len(strs))
+                strs.append(val)
             elif op["type"] == OP_HERE:
                 v = "%s:%d:%d" % op["loc"]
+                val = bytes(v, "utf-8")
                 f.write(";   -- string litteral --\n")
                 f.write("    push %d\n" % len(v))
                 f.write("    push str%d\n" % len(strs))
-                strs.append(v)
+                strs.append(val)
             elif op["type"] == OP_CAST_INT:
                 f.write(";   -- cast to int --\n")
                 pass
@@ -1361,7 +1433,7 @@ def cmpile(program, outfilePath):
         f.write("section .data\n")
         for index, s in enumerate(strs):
             f.write("str%d: \n" % index)
-            f.write("    db " + ','.join(map(hex, list(bytes(s, "utf-8")))) + "\n")  # noqa
+            f.write("    db %s\n" % ','.join(map(hex, list(s))))  # noqa
         f.write("section .bss\n")
         f.write("rmem: resb %d\n" % MEM_CAPACITY)
         f.write("argv: resq 1\n")
@@ -1372,16 +1444,17 @@ def usage(program):
     print()
     print()
     print("OPTION")
-    print("    -I | --Include <directory>    add one include directory to include directory list")
+    print("    -I | --include <directory>    add one include directory to include directory list")
     print("    -l | --limit <n>              set macro depth limit to n (default=1000)")
+    print("    -L | --lex-analysis           analyse your code without compiling or simulating it")
     print("    -u | --unsafe                 disable type checking")
     print("    -d | --debug                  add debug information")
     print()
     print()
     print("SUBCOMMAND")
-    print("    -c | --compile [clean|run]  <file>    Compile  the program")
-    print("    -s | --simulate <file>                Simulate the program")
-    print("    -h | --help                           Show this help")
+    print("    -c | --compile [clean|run|graph]  <file>    Compile  the program")
+    print("    -s | --simulate <file>                      Simulate the program")
+    print("    -h | --help                                 Show this help")
 
 
 def callCmd(cmd):
@@ -1412,7 +1485,7 @@ def unescape_string(s):
     return s.encode('utf-8').decode('unicode_escape').encode('latin-1').decode('utf-8')
 
 def lexLine(lines, file):
-    assert COUNT_TOK == 4, "Missing Token in Lexer"
+    assert COUNT_TOK == 5, "Missing Token in Lexer"
     row = 0
     str_literal_buf = ""
     while row < len(lines):
@@ -1440,10 +1513,16 @@ def lexLine(lines, file):
                     if row >= len(lines):
                         print("%s:%d:%d: ERROR: unclosed string literal" % loc, file=sys.stderr)
                         exit(1)
+                    assert line[col_end] == '"'
+                    col_end += 1
                     text_of_token = str_literal_buf
                     str_literal_buf = ""
-                    yield {"type": TOK_STR, "value": unescape_string(text_of_token), "loc": loc, "expanded": 0}
-                    col = findCol(line, col_end+1, lambda x: not x.isspace())
+                    if col_end < len(line) and line[col_end] == 'C':
+                        col_end += 1
+                        yield {"type": TOK_CSTR, "value": unescape_string(text_of_token), "loc": loc, "expanded": 0}
+                    else:
+                        yield {"type": TOK_STR, "value": unescape_string(text_of_token), "loc": loc, "expanded": 0}
+                    col = findCol(line, col_end, lambda x: not x.isspace())
             elif line[col] == "'":
                 col_end = findCol(line, col+1, lambda x: x == "'")
                 if col_end >= len(line) or line[col_end] != "'":
@@ -1474,7 +1553,7 @@ def lex(file, e = 0):
             tok["expanded"] = e
         return result
 
-assert COUNT_OP == 54, "Missing operation in KEYWORD dict"
+assert COUNT_OP == 55, "Missing operation in KEYWORD dict"
 KEYWORDS = {
     "+": OP_PLUS,
     "-": OP_MINUS,
@@ -1540,6 +1619,8 @@ def humanNameTok(type):
         return "integer litteral"
     elif type == TOK_STR:
         return "string litteral"
+    elif type == TOK_CSTR:
+        return "c string litteral"
     elif type == TOK_CHAR:
         return "character litteral"
     else:
@@ -1558,7 +1639,7 @@ def blocksCrossRef(tokLst):
     rtok = list(reversed(tokLst))
     ip = 0
     macros = {}
-    assert COUNT_OP == 54, "Missing operation in cross reference switch"
+    assert COUNT_OP == 55, "Missing operation in cross reference switch"
     while len(rtok) > 0:
         word = rtok.pop()
         typ = word["type"]
@@ -1567,11 +1648,13 @@ def blocksCrossRef(tokLst):
         op = None
         if(debug):
             print("[DEBUG] %s:%d:%d -> value : %s, type : %s" % (loc + (token, humanNameTok(typ))))
-        assert COUNT_TOK == 4, "Missing Token in Parser"
+        assert COUNT_TOK == 5, "Missing Token in Parser"
         if typ == TOK_INT:
             op = {"type": OP_PUSH, "value": token, "loc": loc, "token": word}
         elif typ == TOK_STR:
             op = {"type": OP_STORESTR, "value": token, "loc": loc, "token": word}
+        elif typ == TOK_CSTR:
+            op = {"type": OP_STORECSTR, "value": token, "loc": loc, "token": word}
         elif typ == TOK_CHAR:
             op = {"type": OP_PUSH, "value": token, "loc": loc, "token": word}
         elif typ == TOK_WORD:
@@ -1595,11 +1678,15 @@ def blocksCrossRef(tokLst):
             ip += 1
         elif op["type"] == OP_ELSE:
             program.append(op)
-            ifa = stack.pop()
-            if program[ifa]["type"] != OP_IF:
-                print("[ERROR] in %s:%d:%d -> else keyword can only close if blocks" % program[ifa]["loc"])  # noqa
+            goa = stack.pop()
+            if program[goa]["type"] != OP_GO:
+                print("[ERROR] in %s:%d:%d -> else keyword can only close if-go conditions" % program[goa]["loc"])  # noqa
                 exit(1)
-            program[ifa]["jmp"] = ip
+            ifa = program[goa]["jmp"]
+            if program[goa]["type"] != OP_GO:
+                print("[ERROR] in %s:%d:%d -> else keyword can only close if-go conditions" % program[ifa]["loc"])  # noqa
+                exit(1)
+            program[goa]["jmp"] = ip
             stack.append(ip)
             ip += 1
         elif op["type"] == OP_DURING:
@@ -1609,22 +1696,32 @@ def blocksCrossRef(tokLst):
         elif op["type"] == OP_GO:
             program.append(op)
             addr = stack.pop()
-            if program[addr]["type"] != OP_DURING:
-                print("[ERROR] in %s:%d:%d -> go keyword can only be used with during blocks" % program[addr]["loc"])  # noqa
-                exit(1)
             program[ip]["jmp"] = addr
             stack.append(ip)
             ip += 1
         elif op["type"] == OP_END:
             program.append(op)
             addr = stack.pop()
-            if program[addr]["type"] == OP_IF or program[addr]["type"] == OP_ELSE:  # noqa
+            if program[addr]["type"] == OP_ELSE:  # noqa
                 program[addr]["jmp"] = ip
+                program[ip]["jmp"] = ip
             elif program[addr]["type"] == OP_GO:
-                if len(program[addr]) < 3:
-                    print("[ERROR] in %s:%d:%d -> go does not have a during attached" % program[addr]["loc"])  # noqa
-                program[ip]["jmp"] = program[addr]["jmp"]
-                program[addr]["jmp"] = ip
+                if not "jmp" in program[addr].keys():
+                    print("[ERROR] %s:%d:%d -> go does not have a block attached" % program[addr]["loc"])  # noqa
+                    exit(1)
+                addrid = program[addr]["jmp"]
+                if program[addrid]["type"] == OP_IF:
+                    program[ip]["jmp"] = ip
+                    program[addr]["jmp"] = ip
+                elif program[addrid]["type"] == OP_DURING:
+                    program[ip]["jmp"] = addrid
+                    program[addr]["jmp"] = ip
+                else:
+                    print("[ERROR] in %s:%d:%d -> end does not have a valid block attached" % program[addr]["loc"])  # noqa
+                    exit(1)
+            elif program[addr]["type"] == OP_IF:
+                    print("[ERROR] in %s:%d:%d -> end need to be if <cond> go block attached" % program[addr]["loc"])  # noqa
+                    exit(1)
             else:
                 assert False, "unreachable cross references"
             ip += 1
@@ -1650,16 +1747,22 @@ def blocksCrossRef(tokLst):
                 tok = rtok.pop()
                 if tok["type"] == TOK_WORD and tok["value"] == "end":
                     if nest == 0:
+                        if debug:
+                            print("!!!!!!!!!  end of macro %s !!!!!!!!!" % name["value"])
                         break
                     else:
                         m["body"].append(tok)
+                        if debug:
+                            print("[DEBUG] n-1 -> ", tok, " => nesting : ", nest)
                         nest -= 1
                 else:
                     if tok["value"] in ["if", "during", "define"]:
+                        if debug:
+                            print("[DEBUG] n+1 -> ", tok, " => nesting : ", nest)
                         nest += 1
                     m["body"].append(tok)
             if tok["type"] != TOK_WORD or tok["value"] != "end":
-                print("[ERROR] %s:%d:%d -> open macro that has not beeen closed" % tok["loc"])  # noqa
+                print("[ERROR] %s:%d:%d -> open macro that has not been closed" % tok["loc"])  # noqa
                 exit(1)
             if debug:
                 print("[INFO]  %s:%d:%d -> New macro definition : %s" % (m["loc"] + (name["value"], )))  # noqa
@@ -1694,11 +1797,63 @@ def blocksCrossRef(tokLst):
         exit(1)
     return program
 
+def genCFGraph(program, path, clean):
+    print("[INFO] -> adding dot graph as debug informations")
+    with open(path + ".dot", "w") as f:
+        f.write("digraph program {\n")
+        f.write("    entryPoint [shape=record];\n")
+        f.write("    entryPoint [label=\"Entry Point\"];\n")
+        f.write("    entryPoint -> N0;\n")
+        for ip in range(len(program)):
+            op = program[ip]
+            if op["type"] == OP_PUSH:
+                f.write("    N%d [label=%d];\n" % (ip, op["value"]))
+                f.write("    N%d -> N%d;\n" % (ip, ip + 1))
+            elif op["type"] == OP_STORESTR:
+                f.write("    N%d [label=%s];\n" % (ip, repr(repr(op["value"]))))
+                f.write("    N%d -> N%d;\n" % (ip, ip + 1))
+            elif op["type"] == OP_STORECSTR:
+                f.write("    N%d [label=%s];\n" % (ip, repr(repr(op["value"]))))
+                f.write("    N%d -> N%d;\n" % (ip, ip + 1))
+            elif op["type"] == OP_IF:
+                f.write("    N%d [shape=octagon label=if fillcolor=azure3 style=filled];\n" % ip)
+                f.write("    N%d -> N%d;\n" % (ip, ip + 1))
+            elif op["type"] == OP_DURING:
+                f.write("    N%d [shape=octagon label=during fillcolor=azure3 style=filled];\n" % ip)
+                f.write("    N%d -> N%d;\n" % (ip, ip + 1))
+            elif op["type"] == OP_GO:
+                assert "jmp" in op.keys(), "[ERROR] -> go with no valid block"
+                f.write("    N%d [shape=diamond label=go fillcolor=aqua style=filled];\n" % ip)
+                f.write("    N%d -> N%d [label=true];\n" % (ip, ip + 1))
+                f.write("    N%d -> N%d [label=false arrowhead=dot style=dashed];\n" % (ip, op["jmp"] + 1))
+            elif op["type"] == OP_END:
+                assert "jmp" in op.keys(), "[ERROR] -> end with no valid block"
+                f.write("    N%d [shape=triangle label=end fillcolor=black style=filled fontcolor=white];\n" % ip)
+                f.write("    N%d -> N%d;\n" % (ip, op["jmp"] + 1))
+            elif op["type"] == OP_CAST_PTR:
+                f.write("    N%d [label=\"to pointer\" shape=invhouse fillcolor=burlywood1 style=filled];\n" % ip)
+                f.write("    N%d -> N%d;\n" % (ip, ip + 1))
+            elif op["type"] == OP_CAST_INT:
+                f.write("    N%d [label=\"to int\" shape=invhouse fillcolor=burlywood1 style=filled];\n" % ip)
+                f.write("    N%d -> N%d;\n" % (ip, ip + 1))
+            elif op["type"] == OP_CAST_BOOL:
+                f.write("    N%d [label=\"to bool\" shape=invhouse fillcolor=burlywood1 style=filled];\n" % ip)
+                f.write("    N%d -> N%d;\n" % (ip, ip + 1))
+            else:
+                f.write("    N%d [label=%s];\n" % (ip, repr(repr(operations[op["type"]]))))
+                f.write("    N%d -> N%d;\n" % (ip, ip + 1))
+        f.write("    N%d [label=Halt fillcolor=crimson style=filled];\n" % len(program))
+        f.write("    N%d [shape=record];\n" % len(program))
+        f.write("}\n")
+    callCmd("dot -Tsvg " + path + ".dot -o " + path + ".svg")
+    if clean:
+        callCmd("rm -rf " + path + ".dot")
 
 if __name__ == "__main__":
     argv = sys.argv
     assert len(argv) >= 1, "[ERROR] -> no argument where given during program launching"  # noqa
     (program, argv) = popFirst(argv)
+    lexOnly = False
     if len(argv) < 1:
         usage(program)
         print("\n\n[ERROR] -> no subcommand provided")
@@ -1707,7 +1862,7 @@ if __name__ == "__main__":
         if argv[0] == "-d" or argv[0] == "--debug":
             argv = argv[1:]
             debug = True
-        elif argv[0] == "-I" or argv[0] == "--Include":
+        elif argv[0] == "-I" or argv[0] == "--include":
             argv = argv[1:]
             if len(argv) == 0:
                 usage(program)
@@ -1718,7 +1873,10 @@ if __name__ == "__main__":
         elif argv[0] == "-u" or argv[0] == "--unsafe":
             argv = argv[1:]
             unsafe = True
-        elif argv[0] == '-l' or argv[0] == '--limit':
+        elif argv[0] == "-L" or argv[0] == "--lex-analysis":
+            argv = argv[1:]
+            lexOnly = True
+        elif argv[0] == '-l' or argv[0] == "--limit":
             argv = argv[1:]
             if len(argv) == 0:
                 usage(program)
@@ -1733,7 +1891,17 @@ if __name__ == "__main__":
                 exit(1)
         else:
             break
-
+    if lexOnly:
+        if len(argv) == 0:
+            usage(program)
+            print("[ERROR] -> no file to lex provided")
+            exit(1)
+        toLx, argv = popFirst(argv)
+        prog = blocksCrossRef(lex(toLx))
+        if not unsafe:
+            typecheck(prog)
+        print("your program is correct no error founded")
+        exit(0)
     (cmd, argv) = popFirst(argv)
     if cmd == "-h" or cmd == "--help":
         usage(program)
@@ -1751,23 +1919,38 @@ if __name__ == "__main__":
     elif cmd == "-c" or cmd == "--compile":
         rmb = False
         run = False
+        grp = False
         inputFile = None
         if len(argv) < 1:
             usage(program)
             print("\n\n[ERROR] -> no file provided for compilation")
             exit(1)
         elif len(argv) > 1:
-            if len(argv) >= 3:
-                (rm, argv) = popFirst(argv)
+            (rm, argv) = popFirst(argv)
+            if len(argv) >= 2:
+                if len(argv) >= 3:
+                    if rm == "clean":
+                        rmb = True
+                    elif rm == "run":
+                        run = True
+                    elif rm == "graph":
+                        grp = True
+                    (rm, argv) = popFirst(argv)
                 if rm == "clean":
                     rmb = True
+                    (rm, argv) = popFirst(argv)
                 elif rm == "run":
                     run = True
-            (rm, argv) = popFirst(argv)
+                    (rm, argv) = popFirst(argv)
+                elif rm == "graph":
+                    grp = True
+                    (rm, argv) = popFirst(argv)
             if rm == "clean":
                 rmb = True
             elif rm == "run":
                 run = True
+            elif rm == "graph":
+                grp = True
             else:
                 inputFile = rm
         if inputFile == None:
@@ -1781,6 +1964,8 @@ if __name__ == "__main__":
         outObj = outBin + ".o"
         if not unsafe:
             typecheck(parsedProg)
+        if grp:
+            genCFGraph(parsedProg, outBin, rmb)
         cmpile(parsedProg, outFile)
         callCmd("nasm -felf64 " + outFile)
         callCmd("ld -o " + outBin + " " + outObj)

@@ -1,6 +1,6 @@
 addin "std"
 
-3 2 % @bool if
+if 3 2 % @bool go
         "3 is even" stdout write _
 else
         "3 is odd" stdout write _

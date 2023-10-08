@@ -4,3 +4,20 @@ define strlen
                 1 + <>
         end _
 end
+
+define cstr-to-tstr
+        strlen <>
+        dup strlen <>
+end
+
+define streq
+        during
+                if <+> , 0 != <+> , 0 != & @bool go 
+                        <+> , <+> , =
+                else
+                        false
+                end
+        go 1 + <> 1 + end
+        , 0 = <>
+        , 0 = & @bool
+end
