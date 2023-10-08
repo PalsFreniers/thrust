@@ -2,9 +2,10 @@
 :b stdin 0
 
 :i returncode 0
-:b stdout 124
+:b stdout 184
 A + nasm -felf64 examples/E07-syscalls.asm
  + ld -o examples/E07-syscalls examples/E07-syscalls.o
+ + rm -rf examples/E07-syscalls.asm examples/E07-syscalls.o
  + examples/E07-syscalls 
 
 :b stderr 0

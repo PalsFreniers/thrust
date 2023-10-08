@@ -2,11 +2,12 @@
 :b stdin 0
 
 :i returncode 0
-:b stdout 181
+:b stdout 259
 String // test
 Second
  + nasm -felf64 examples/E09-strings_litterals.asm
  + ld -o examples/E09-strings_litterals examples/E09-strings_litterals.o
+ + rm -rf examples/E09-strings_litterals.asm examples/E09-strings_litterals.o
  + examples/E09-strings_litterals 
 
 :b stderr 0

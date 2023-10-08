@@ -2,7 +2,7 @@
 :b stdin 0
 
 :i returncode 0
-:b stdout 121
+:b stdout 175
 0
 0
 1
@@ -10,6 +10,7 @@
 0
  + nasm -felf64 examples/E02-logic.asm
  + ld -o examples/E02-logic examples/E02-logic.o
+ + rm -rf examples/E02-logic.asm examples/E02-logic.o
  + examples/E02-logic 
 
 :b stderr 0

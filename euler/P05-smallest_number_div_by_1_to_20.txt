@@ -2,10 +2,11 @@
 :b stdin 0
 
 :i returncode 0
-:b stdout 209
+:b stdout 307
 232792560
  + nasm -felf64 euler/P05-smallest_number_div_by_1_to_20.asm
  + ld -o euler/P05-smallest_number_div_by_1_to_20 euler/P05-smallest_number_div_by_1_to_20.o
+ + rm -rf euler/P05-smallest_number_div_by_1_to_20.asm euler/P05-smallest_number_div_by_1_to_20.o
  + euler/P05-smallest_number_div_by_1_to_20 
 
 :b stderr 0

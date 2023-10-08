@@ -6,12 +6,13 @@ test
 :b stdin 0
 
 :i returncode 0
-:b stdout 236
+:b stdout 324
 examples/E17-command-line-arguments
 hello
 test
  + nasm -felf64 examples/E17-command-line-arguments.asm
  + ld -o examples/E17-command-line-arguments examples/E17-command-line-arguments.o
+ + rm -rf examples/E17-command-line-arguments.asm examples/E17-command-line-arguments.o
  + examples/E17-command-line-arguments hello test
 
 :b stderr 0

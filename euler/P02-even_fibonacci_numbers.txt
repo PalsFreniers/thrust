@@ -2,10 +2,11 @@
 :b stdin 0
 
 :i returncode 0
-:b stdout 175
+:b stdout 257
 4613732
  + nasm -felf64 euler/P02-even_fibonacci_numbers.asm
  + ld -o euler/P02-even_fibonacci_numbers euler/P02-even_fibonacci_numbers.o
+ + rm -rf euler/P02-even_fibonacci_numbers.asm euler/P02-even_fibonacci_numbers.o
  + euler/P02-even_fibonacci_numbers 
 
 :b stderr 0

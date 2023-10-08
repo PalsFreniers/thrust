@@ -2,7 +2,7 @@
 :b stdin 0
 
 :i returncode 0
-:b stdout 29537
+:b stdout 29599
                                                                                                                                                                           # 
                                                                                                                                                                          ## 
                                                                                                                                                                         ### 
@@ -175,6 +175,7 @@
  ##     #   #### ###  #  ##  # ########  ###  ##    #   ## #  ##   #  ## #####   ###   #  ## ### #  ## #####   #  ## #####   ########  ##   #     ####  #  ## #####   #  ## 
  + nasm -felf64 challenges/C02-rule11O.asm
  + ld -o challenges/C02-rule11O challenges/C02-rule11O.o
+ + rm -rf challenges/C02-rule11O.asm challenges/C02-rule11O.o
  + challenges/C02-rule11O 
 
 :b stderr 0

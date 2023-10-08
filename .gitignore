@@ -2,5 +2,10 @@ t.c
 tests
 thrust
 thrust.svg
-*/*
-!*/*.thrt
+challenges
+!challenges/*.thrt
+euler
+!euler/*.thrt
+examples
+!examples/*.thrt
+

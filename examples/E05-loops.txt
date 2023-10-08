@@ -2,7 +2,7 @@
 :b stdin 0
 
 :i returncode 0
-:b stdout 271
+:b stdout 325
 0
 1
 2
@@ -65,6 +65,7 @@
 29
  + nasm -felf64 examples/E05-loops.asm
  + ld -o examples/E05-loops examples/E05-loops.o
+ + rm -rf examples/E05-loops.asm examples/E05-loops.o
  + examples/E05-loops 
 
 :b stderr 0

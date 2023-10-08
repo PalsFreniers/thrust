@@ -2,10 +2,11 @@
 :b stdin 0
 
 :i returncode 0
-:b stdout 164
+:b stdout 242
 6857
  + nasm -felf64 euler/P03-largest_prime_factor.asm
  + ld -o euler/P03-largest_prime_factor euler/P03-largest_prime_factor.o
+ + rm -rf euler/P03-largest_prime_factor.asm euler/P03-largest_prime_factor.o
  + euler/P03-largest_prime_factor 
 
 :b stderr 0

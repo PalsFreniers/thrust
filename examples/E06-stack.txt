@@ -2,7 +2,7 @@
 :b stdin 0
 
 :i returncode 0
-:b stdout 141
+:b stdout 195
 1
 2
 2
@@ -20,6 +20,7 @@
 2
  + nasm -felf64 examples/E06-stack.asm
  + ld -o examples/E06-stack examples/E06-stack.o
+ + rm -rf examples/E06-stack.asm examples/E06-stack.o
  + examples/E06-stack 
 
 :b stderr 0

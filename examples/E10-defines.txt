@@ -2,11 +2,12 @@
 :b stdin 0
 
 :i returncode 0
-:b stdout 146
+:b stdout 204
 3
 this is done with macros
  + nasm -felf64 examples/E10-defines.asm
  + ld -o examples/E10-defines examples/E10-defines.o
+ + rm -rf examples/E10-defines.asm examples/E10-defines.o
  + examples/E10-defines 
 
 :b stderr 0

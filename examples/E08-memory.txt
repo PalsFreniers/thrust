@@ -2,10 +2,11 @@
 :b stdin 0
 
 :i returncode 0
-:b stdout 117
+:b stdout 173
 3
  + nasm -felf64 examples/E08-memory.asm
  + ld -o examples/E08-memory examples/E08-memory.o
+ + rm -rf examples/E08-memory.asm examples/E08-memory.o
  + examples/E08-memory 
 
 :b stderr 0

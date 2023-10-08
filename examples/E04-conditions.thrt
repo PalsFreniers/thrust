@@ -2,13 +2,13 @@ addin "std"
 
 define print1 1 dump end
 define print0 0 dump end
-if 1 @bool go
+if true go
     print1
 else
     print0
 end
 
-if 0 @bool go
+if false go
     print1
 else
     print0

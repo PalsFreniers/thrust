@@ -2,11 +2,12 @@
 :b stdin 0
 
 :i returncode 0
-:b stdout 137
+:b stdout 195
 3
 Hello includes!
  + nasm -felf64 examples/E11-include.asm
  + ld -o examples/E11-include examples/E11-include.o
+ + rm -rf examples/E11-include.asm examples/E11-include.o
  + examples/E11-include 
 
 :b stderr 0

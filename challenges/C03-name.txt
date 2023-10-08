@@ -3,10 +3,11 @@
 Tidian
 
 :i returncode 0
-:b stdout 149
+:b stdout 205
 What is your name ? Hello, Tidian
  + nasm -felf64 challenges/C03-name.asm
  + ld -o challenges/C03-name challenges/C03-name.o
+ + rm -rf challenges/C03-name.asm challenges/C03-name.o
  + challenges/C03-name 
 
 :b stderr 0

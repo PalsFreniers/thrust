@@ -2,10 +2,11 @@
 :b stdin 0
 
 :i returncode 0
-:b stdout 157
+:b stdout 227
 Hello, World!
  + nasm -felf64 challenges/C01-Hello_World.asm
  + ld -o challenges/C01-Hello_World challenges/C01-Hello_World.o
+ + rm -rf challenges/C01-Hello_World.asm challenges/C01-Hello_World.o
  + challenges/C01-Hello_World 
 
 :b stderr 0
