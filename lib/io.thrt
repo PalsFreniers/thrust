@@ -17,6 +17,33 @@ define M_EXEC  1 end
 define M_WRITE 2 end
 define M_READ  4 end
 
+define sizeof(fstat)            144   end
+define fstat.st_dev             0   + end
+define fstat.st_ino             8   + end
+define fstat.st_nlink           16  + end
+define fstat.st_mode            24  + end
+define fstat.st_uid             28  + end
+define fstat.st_gid             32  + end
+define fstat.st_rdev            40  + end
+define fstat.st_size            48  + end
+define fstat.st_blksize         56  + end
+define fstat.st_block           64  + end
+define fstat.st_atim            72  + end
+define fstat.st_mtim            88  + end
+define fstat.st_ctim            104 + end
+define sizeof(fstat.st_dev)     8   + end
+define sizeof(fstat.st_ino)     8   + end
+define sizeof(fstat.st_nlink)   4   + end
+define sizeof(fstat.st_mode)    8   + end
+define sizeof(fstat.st_uid)     4   + end
+define sizeof(fstat.st_gid)     4   + end
+define sizeof(fstat.st_rdev)    8   + end
+define sizeof(fstat.st_size)    8   + end
+define sizeof(fstat.st_blksize) 8   + end
+define sizeof(fstat.st_block)   8   + end
+define sizeof(fstat.st_atim)    16  + end
+define sizeof(fstat.st_mtim)    16  + end
+define sizeof(fstat.st_ctim)    16  + end
 
 // TODO : put functions instead of macros
 define puts
