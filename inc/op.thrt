@@ -1,0 +1,40 @@
+// struct Op {
+//         type: u64,
+//         operand: u64,
+// }
+define sizeof(Op)       16 end
+define Op.type          0 + end
+define Op.operand       8 + end
+
+// # mem type operand -> #
+fn Op.write()
+        <-> dup
+        Op.operand <-> <> .64
+        Op.type .64
+end
+
+// # mem type -> #
+define Op.write(type)
+        <> Op.type .64
+end
+
+// # mem operand -> #
+define Op.write(operand)
+        <> Op.operand .64
+end
+
+// # mem -> # type operand
+fn Op.read()
+        dup Op.type ,64
+        <> Op.operand ,64
+end
+
+// # mem -> # type
+define Op.read(type)
+        Op.type ,64
+end
+
+// # mem -> # operand
+define Op.read(operand)
+        Op.operand ,64
+end

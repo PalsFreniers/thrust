@@ -1,6 +1,6 @@
 addin "std"
 
-define test 30 end
+const test 30 end
 
 0 during dup test < go
     dup dump
@@ -12,4 +12,4 @@ test 0 during dup2 > go
     1 +
 end _ _
 
-0 exit
+EXIT_SUCCESS exit

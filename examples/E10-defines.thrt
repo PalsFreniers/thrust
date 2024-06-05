@@ -1,11 +1,13 @@
 addin "std"
 
+alloc mem 10 end
+
 define random
-    mem + <> .
+    mem + <> .8
 end
 
 define readmem
-    mem + ,
+    mem + ,8
 end
 
 1 0 random

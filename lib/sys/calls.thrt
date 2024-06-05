@@ -1,27 +1,47 @@
 // syscalls numbers
-define sys_read  0 end
-define sys_write 1 end
-define sys_open  2 end
-define sys_close 3 end
-define sys_exit  60 end
+const sys_read   0   end
+const sys_write  1   end
+const sys_open   2   end
+const sys_close  3   end
+const sys_fstat  5   end
+const sys_mmap   9   end
+const sys_munmap 11  end
+const sys_exit   60  end
+const sys_openat 257 end
 
 // syscall functions
 define read
-    sys_read call3
+        sys_read call3
 end
 
 define write
-    sys_write call3
+        sys_write call3
 end
 
 define open
-    sys_open call3
+        sys_open call2
 end
 
 define close
-    sys_close call1
+        sys_close call1
+end
+
+define fstat
+        sys_fstat call2
+end
+
+define mmap
+        sys_mmap call6
+end
+
+define munmap
+        sys_munmap call2
 end
 
 define exit
-    sys_exit call1 _
+        sys_exit call1 _
+end
+
+define openat
+        sys_openat call3
 end

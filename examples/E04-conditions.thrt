@@ -1,7 +1,9 @@
 addin "std"
 
-define print1 1 dump end
 define print0 0 dump end
+define print1 1 dump end
+define print2 2 dump end
+
 if true go
     print1
 else
@@ -13,4 +15,13 @@ if false go
 else
     print0
 end
+
+if false go
+    print1
+elif true go
+    print2
+else
+    print0
+end
+
 EXIT_SUCCESS exit

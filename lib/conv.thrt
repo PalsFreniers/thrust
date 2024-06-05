@@ -1,0 +1,9 @@
+alloc atoi[a] 16 end
+fn atoi
+        atoi[a] <--> str.write() 
+        0
+        0 during dup atoi[a] str.read(count) < go
+                dup atoi[a] str.read(data) + ,8 '0' -
+                <-> 10 * + <> ++
+        end _
+end

@@ -94,6 +94,7 @@ class OpType(Enum):
     PUSH_CSTR=auto()
     PUSH_MEM=auto()
     PUSH_LOCAL_MEM=auto()
+    ALLOC_LOCAL_MEM=auto()
     INTRINSIC=auto()
     IF=auto()
     ELIF=auto()
@@ -191,7 +192,7 @@ def type_check_program(program: Program):
         ctx = contexts[-1];
         # TODO: type checking fails on empty programs
         op = program.ops[ctx.ip]
-        assert len(OpType) == 16, "Exhaustive ops handling in type_check_program()"
+        assert len(OpType) == 17, "Exhaustive ops handling in type_check_program()"
         if op.typ == OpType.PUSH_INT:
             ctx.stack.append((DataType.INT, op.token))
             ctx.ip += 1
@@ -207,6 +208,8 @@ def type_check_program(program: Program):
             ctx.ip += 1
         elif op.typ == OpType.PUSH_LOCAL_MEM:
             ctx.stack.append((DataType.PTR, op.token))
+            ctx.ip += 1
+        elif op.typ == OpType.ALLOC_LOCAL_MEM:
             ctx.ip += 1
         elif op.typ == OpType.FUNCTION:
             assert isinstance(op.operand, OpAddr)
@@ -818,7 +821,7 @@ def generate_nasm_linux_x86_64(program: Program, out_file_path: str):
         out.write("    mov [ret_stack_rsp], rax\n")
         for ip in range(len(program.ops)):
             op = program.ops[ip]
-            assert len(OpType) == 16, "Exhaustive ops handling in generate_nasm_linux_x86_64"
+            assert len(OpType) == 17, "Exhaustive ops handling in generate_nasm_linux_x86_64"
             out.write("addr_%d:\n" % ip)
             if op.typ == OpType.PUSH_INT:
                 assert isinstance(op.operand, int), "This could be a bug in the parsing step"
@@ -847,10 +850,9 @@ def generate_nasm_linux_x86_64(program: Program, out_file_path: str):
                 out.write("    add rax, %d\n" % op.operand)
                 out.write("    push rax\n")
             elif op.typ == OpType.PUSH_LOCAL_MEM:
-                assert isinstance(op.operand, MemAddr)
-                out.write("    mov rax, [ret_stack_rsp]\n")
-                out.write("    add rax, %d\n" % op.operand)
-                out.write("    push rax\n")
+                assert False, "not implemented"
+            elif op.typ == OpType.ALLOC_LOCAL_MEM:
+                assert False, "Not Implemented"
             elif op.typ == OpType.IF:
                 out.write("    ;; -- if --\n")
             elif op.typ == OpType.WHILE:
@@ -879,19 +881,13 @@ def generate_nasm_linux_x86_64(program: Program, out_file_path: str):
                 assert isinstance(op.operand, OpAddr), "This could be a bug in the parsing step"
                 out.write("    jmp addr_%d\n" % op.operand)
             elif op.typ == OpType.STACK_FRAME:
-                assert isinstance(op.operand, int)
                 out.write("    ;; -- stack prep --\n")
-                if op.operand != 0:
-                    out.write("    sub rsp, %d\n" % op.operand)
                 out.write("    mov [ret_stack_rsp], rsp\n")
                 out.write("    mov rsp, rax\n")
             elif op.typ == OpType.RETURN:
-                assert isinstance(op.operand, int)
                 out.write("    ;; -- return --\n")
                 out.write("    mov rax, rsp\n")
                 out.write("    mov rsp, [ret_stack_rsp]\n")
-                if op.operand != 0:
-                    out.write("    add rsp, %d\n" % op.operand)
                 out.write("    ret\n")
             elif op.typ == OpType.CALL:
                 out.write("    ;; -- call --\n")
@@ -1516,13 +1512,9 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                     else:
                         compiler_error_with_expansion_stack(program.ops[pre_do_ip].token, '`end` can only close `do` blocks that are preceded by `if`, `while` or `elif`')
                         exit(1)
-                elif program.ops[block_ip].typ == OpType.STACK_FRAME:
-                    assert cur_proc is not None
-                    program.ops[block_ip].operand = cur_proc.memCapacity
-                    block_ip = stack.pop()
-                    assert program.ops[block_ip].typ is OpType.FUNCTION
+                elif program.ops[block_ip].typ == OpType.FUNCTION:
                     program.ops[block_ip].operand = ip + 1
-                    program.ops.append(Op(typ=OpType.RETURN, token=token, operand=cur_proc.memCapacity))
+                    program.ops.append(Op(typ=OpType.RETURN, token=token))
                     cur_proc = None
                 else:
                     compiler_error_with_expansion_stack(program.ops[block_ip].token, '`end` can only close `else`, `do`, `macro` or `fn` blocks for now')      
@@ -1639,7 +1631,6 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                 stack.append(ip)
                 ip += 1
                 program.ops.append(Op(typ=OpType.STACK_FRAME, token=token))
-                stack.append(ip)
                 ip += 1
                 if len(rtokens) == 0:
                     compiler_error_with_expansion_stack(token, "expected procedure name but found nothing")

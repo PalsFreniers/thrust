@@ -1,9 +1,11 @@
 addin "std"
 
-mem 0 + 'H' .
-mem 1 + 'e' .
-mem 2 + 'y' .
-mem 3 + '!' .
-mem 4 + 10  .
+alloc mem 5 end
+
+mem 0 + 'H' .8
+mem 1 + 'e' .8
+mem 2 + 'y' .8
+mem 3 + '!' .8
+mem 4 + 10  .8
 
 5 mem puts

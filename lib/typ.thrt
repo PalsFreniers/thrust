@@ -2,3 +2,17 @@ define true  1 @bool end
 define false 0 @bool end
 
 define NULL 0 @ptr end
+
+const sizeof(u8) 1 end
+const sizeof(u16) 2 end
+const sizeof(u32) 4 end
+const sizeof(u64) 8 end
+
+const sizeof(i8) 1 end
+const sizeof(i16) 2 end
+const sizeof(i32) 4 end
+const sizeof(i64) 8 end
+
+const sizeof(ptr) 8 end
+
+const sizeof(size_t) sizeof(u64) end

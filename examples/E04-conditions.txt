@@ -2,9 +2,10 @@
 :b stdin 0
 
 :i returncode 0
-:b stdout 199
+:b stdout 201
 1
 0
+2
  + nasm -felf64 examples/E04-conditions.asm
  + ld -o examples/E04-conditions examples/E04-conditions.o
  + rm -rf examples/E04-conditions.asm examples/E04-conditions.o

@@ -1,6 +1,8 @@
 addin "std"
 
-mem 65 .
+alloc mem 1 end
+
+mem 65 .8
 
 1 mem stdout write _
 

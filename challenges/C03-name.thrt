@@ -1,16 +1,18 @@
 addin "std"
 
-"What is your name ? " stdout write _
+alloc mem 100 end
 
-100 mem stdin read
+"What is your name ? " puts
+
+100 mem gets
 
 if dup 0 <= go
-        "Error during readin name" stderr write _
+        "Error during readin name" eputs
         EXIT_FAILURE exit
 end
 
-"Hello, " stdout write _
+"Hello, " puts
 
-mem stdout write _
+mem puts
 
 EXIT_SUCCESS exit

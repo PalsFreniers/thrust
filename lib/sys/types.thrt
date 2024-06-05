@@ -1,0 +1,27 @@
+const sizeof(stat) 144 end
+define stat.dev 0 + end
+define stat.ino 8 + end
+define stat.nlink 16 + end
+define stat.mode 24 + end
+define stat.uid 28 + end
+define stat.gid 32 + end
+define stat.rdev 40 + end
+define stat.size 48 + end
+define stat.blksize 56 + end
+define stat.blocks 64 + end
+define stat.atim 72 + end
+define stat.mtim 88 + end
+define stat.ctim 104 + end
+define sizeof(stat.dev) 8 + end
+define sizeof(stat.ino) 8 + end
+define sizeof(stat.nlink) 8 + end
+define sizeof(stat.mode) 4 + end
+define sizeof(stat.uid) 4 + end
+define sizeof(stat.gid) 4 + end
+define sizeof(stat.rdev) 8 + end
+define sizeof(stat.size) 8 + end
+define sizeof(stat.blksize) 8 + end
+define sizeof(stat.blocks) 8 + end
+define sizeof(stat.atim) 16 + end
+define sizeof(stat.mtim) 16 + end
+define sizeof(stat.ctim) 16 + end

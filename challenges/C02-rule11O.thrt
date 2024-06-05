@@ -1,47 +1,48 @@
 addin "std"
 
-define boardSize 172 end
+const boardSize 172 end
+alloc mem boardSize 100 * end
 
-mem boardSize 2 - + 1 . // set the last cell of the board to 1
+mem boardSize 2 - + 1 .8 // set the last cell of the board to 1
 
 0 during dup boardSize 2 - < go
         // print the current line
         0 during dup boardSize < go
-                if dup mem + , @bool go // get the value of the board[i][j] (1 or 0) and check if it is one or zero
-                        dup boardSize + mem + '#' . // put a '$' if it's zero
+                if dup mem + ,8 @bool go // get the value of the board[i][j] (1 or 0) and check if it is one or zero
+                        dup boardSize + mem + '#' .8 // put a '#' if it's one
                 else // otherwise
-                        dup boardSize + mem + ' ' . // put a ' ' if it's one
+                        dup boardSize + mem + ' ' .8 // put a ' ' if it's zero
                 end
                 1 + // j++
         end
         _
-        boardSize dup + mem + 10 .
+        boardSize dup + mem + 10 .8
         boardSize 1 + mem boardSize + puts // print the character to the screen
         // int window = (board[0] << 1) | board[1];
         mem boardSize + // window variable address
-        mem , 1 << // (board[0] << 1)
-        mem 1 + , // board[1]
+        mem ,8 1 << // (board[0] << 1)
+        mem 1 + ,8 // board[1]
         | // or
-        . // store
+        .8 // store
         // second for loop
         0 during dup boardSize 1 - < go
                 // window = board[j+1] | window;
                 dup 1 + // j + 1
-                mem + , // board[j+1]
-                mem boardSize + , // window
+                mem + ,8 // board[j+1]
+                mem boardSize + ,8 // window
                 1 << 7 &
                 | // |
                 mem boardSize + // memory addresse to where to store the window
                 <> // swap the two elements of the stack
-                . // store
+                .8 // store
                 // stack pointer in the loop = 2 (should normally be 2)
                 // board[j] = 
                 dup mem + // addr of board[j]
                 110 // 110 arbitrary rule byte
-                mem boardSize + , // putting window onto the stack
+                mem boardSize + ,8 // putting window onto the stack
                 >> // 110 >> window
                 1 & // & 1
-                . // store
+                .8 // store
                 1 + // j++
         end
         _ // remove noise
