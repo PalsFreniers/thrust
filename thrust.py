@@ -236,9 +236,33 @@ def type_check_program(program: Program):
             assert isinstance(op.operand, OpAddr)
             ctx.ip = op.operand
         elif op.typ == OpType.INTRINSIC:
-            assert len(Intrinsic) == 46, "Exhaustive intrinsic handling in type_check_program()"
+            assert len(Intrinsic) == 48, "Exhaustive intrinsic handling in type_check_program()"
             assert isinstance(op.operand, Intrinsic), "This could be a bug in compilation step"
-            if op.operand == Intrinsic.PLUS:
+            if op.operand == Intrinsic.MIN:
+                assert len(DataType) == 3, "Exhaustive type handling in PLUS intrinsic"
+                if len(ctx.stack) < 2:
+                    not_enough_arguments(op)
+                    exit(1)
+                a_type, a_loc = ctx.stack.pop()
+                b_type, b_loc = ctx.stack.pop()
+                if a_type == b_type and a_type == DataType.INT:
+                    ctx.stack.append((DataType.INT, op.token))
+                else:
+                    compiler_error_with_expansion_stack(op.token, "invalid argument types for MIN intrinsic. Expected INT")
+                    exit(1)
+            elif op.operand == Intrinsic.MAX:
+                assert len(DataType) == 3, "Exhaustive type handling in PLUS intrinsic"
+                if len(ctx.stack) < 2:
+                    not_enough_arguments(op)
+                    exit(1)
+                a_type, a_loc = ctx.stack.pop()
+                b_type, b_loc = ctx.stack.pop()
+                if a_type == b_type and a_type == DataType.INT:
+                    ctx.stack.append((DataType.INT, op.token))
+                else:
+                    compiler_error_with_expansion_stack(op.token, "invalid argument types for MIN intrinsic. Expected INT")
+                    exit(1)
+            elif op.operand == Intrinsic.PLUS:
                 assert len(DataType) == 3, "Exhaustive type handling in PLUS intrinsic"
                 if len(ctx.stack) < 2:
                     not_enough_arguments(op)
@@ -734,6 +758,7 @@ def type_check_program(program: Program):
                     ctx.stack.pop()
                 ctx.stack.append((DataType.INT, op.token))
             else:
+                print(op)
                 assert False, "unreachable"
             ctx.ip += 1
         elif op.typ == OpType.IF:
@@ -928,8 +953,22 @@ def generate_nasm_linux_x86_64(program: Program, out_file_path: str):
                 out.write("    mov [ret_stack_rsp], rsp\n")
                 out.write("    mov rsp, rax\n")
             elif op.typ == OpType.INTRINSIC:
-                assert len(Intrinsic) == 46, "Exhaustive intrinsic handling in generate_nasm_linux_x86_64()"
-                if op.operand == Intrinsic.PLUS:
+                assert len(Intrinsic) == 48, "Exhaustive intrinsic handling in generate_nasm_linux_x86_64()"
+                if op.operand == Intrinsic.MIN:
+                    out.write("    ;; -- min --\n")
+                    out.write("    pop rax\n")
+                    out.write("    pop rbx\n")
+                    out.write("    cmp rax, rbx\n")
+                    out.write("    cmovle rbx, rax\n")
+                    out.write("    push rbx\n")
+                elif op.operand == Intrinsic.MAX:
+                    out.write("    ;; -- min --\n")
+                    out.write("    pop rax\n")
+                    out.write("    pop rbx\n")
+                    out.write("    cmp rax, rbx\n")
+                    out.write("    cmovge rbx, rax\n")
+                    out.write("    push rbx\n")
+                elif op.operand == Intrinsic.PLUS:
                     out.write("    ;; -- plus --\n")
                     out.write("    pop rax\n")
                     out.write("    pop rbx\n")
@@ -1386,6 +1425,12 @@ def eval_expression(rtokens: List[Token], macros: Dict[str, Macro], consts: Dict
             elif token.value == Keyword.RESET:
                 stack.append((iota[0], DataType.INT))
                 iota[0] = 0
+            elif token.value == Keyword.FALSE:
+                stack.append((0, DataType.BOOL))
+            elif token.value == Keyword.TRUE:
+                stack.append((1, DataType.BOOL))
+            elif token.value == Keyword.NULL:
+                stack.append((0, DataType.PTR))
             else:
                 assert False, "TODO: unsupported keyword"
         elif token.typ == TokenType.INT:
@@ -1482,6 +1527,28 @@ def eval_expression(rtokens: List[Token], macros: Dict[str, Macro], consts: Dict
                     compiler_note(token.loc, f"    {(a_type, b_type)}")
                     exit(1)
                 stack.append((int(a == b), DataType.BOOL))
+            elif token.value == INTRINSIC_NAMES[Intrinsic.MIN]:
+                if len(stack) < 2:
+                    compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                    exit(1)
+                a, a_type = stack.pop()
+                b, b_type = stack.pop()
+                if a_type != b_type and a_type != DataType.INT:
+                    compiler_error_with_expansion_stack(token, f"intrinsic `{token.value}` expects the arguments to have the type INT. The actual types are")
+                    compiler_note(token.loc, f"    {(a_type, b_type)}")
+                    exit(1)
+                stack.append((min(a, b), DataType.INT))
+            elif token.value == INTRINSIC_NAMES[Intrinsic.MAX]:
+                if len(stack) < 2:
+                    compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                    exit(1)
+                a, a_type = stack.pop()
+                b, b_type = stack.pop()
+                if a_type != b_type and a_type != DataType.INT:
+                    compiler_error_with_expansion_stack(token, f"intrinsic `{token.value}` expects the arguments to have the type INT. The actual types are")
+                    compiler_note(token.loc, f"    {(a_type, b_type)}")
+                    exit(1)
+                stack.append((max(a, b), DataType.INT))
             elif token.value in macros:
                 if token.expanded_count >= expansion_limit:
                     compiler_error_with_expansion_stack(token, "the macro exceeded the expansion limit (it expanded %d times)" % token.expanded_count)
@@ -1496,6 +1563,7 @@ def eval_expression(rtokens: List[Token], macros: Dict[str, Macro], consts: Dict
             assert False, "TODO: unsupported token"
     if len(stack) != 1:
         assert False, "TODO: error in const evaluation stack"
+    print(f"{stack[-1]}")
     return stack.pop()
 
 def human(obj: Union[TokenType, Op, Intrinsic]) -> str:

@@ -21,7 +21,7 @@ fn cstreq
         ,8 0 = & @bool
 end
 
-const sizeof(str) 16 end
+const sizeof(str) sizeof(u64) sizeof(ptr) + end
 define str.count 0 + end
 define str.data 8 + end
 
