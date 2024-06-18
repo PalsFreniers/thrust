@@ -1,0 +1,41 @@
+addin "std"
+addin "python_std"
+addin "enums"
+
+// consts
+const DEFAULT_EXPANSION_LIMIT 1000 end
+const X86_64_RET_STACK_CAPACITY 4 1024 * end
+const EXPANSION_DIAGNOSTIC_LIMIT 10 end
+
+const debug false end
+
+// struct loc
+//      String
+//      int
+//      int
+
+const Loc.file  sizeof(String) offset end
+const Loc.cols  sizeof(u64)    offset end
+const Loc.lines sizeof(u64)    offset end
+const sizeof(Loc)              reset  end
+
+class Token:
+    typ: TokenType
+    text: str
+    loc: Loc
+    value: Union[int, str, Keyword]
+    expanded_from: Optional['Token'] = None
+    expanded_count: int = 0
+
+// struct Token
+//      u8
+//      String
+//      Loc
+//      u64
+//      ptr
+//      u32
+
+const Token.type  sizeof(u8)     offset end
+const Token.text  sizeof(String) offset end
+const Token.loc   sizeof(Loc)    offset end
+const Token.value sizeof(u64)    offset end

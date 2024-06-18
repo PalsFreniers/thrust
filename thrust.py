@@ -33,6 +33,12 @@ class Keyword(Enum):
     MEMORY=auto()
     FUNCTION=auto()
     CONST=auto()
+    OFFSET=auto()
+    RESET=auto()
+    ASSERT=auto()
+    TRUE=auto()
+    FALSE=auto()
+    NULL=auto()
 
 class DataType(IntEnum):
     INT=auto()
@@ -83,12 +89,16 @@ class Intrinsic(Enum):
     OR=auto()
     NOT=auto()
     XOR=auto()
+    MAX=auto()
+    MIN=auto()
     HERE=auto()
     CAST_PTR=auto()
     CAST_INT=auto()
     CAST_BOOL=auto()
 
 class OpType(Enum):
+    PUSH_BOOL=auto()
+    PUSH_PTR=auto()
     PUSH_INT=auto()
     PUSH_STR=auto()
     PUSH_CSTR=auto()
@@ -191,8 +201,14 @@ def type_check_program(program: Program):
         ctx = contexts[-1];
         # TODO: type checking fails on empty programs
         op = program.ops[ctx.ip]
-        assert len(OpType) == 16, "Exhaustive ops handling in type_check_program()"
-        if op.typ == OpType.PUSH_INT:
+        assert len(OpType) == 18, "Exhaustive ops handling in type_check_program()"
+        if op.typ == OpType.PUSH_BOOL:
+            ctx.stack.append((DataType.BOOL, op.token))
+            ctx.ip += 1
+        elif op.typ == OpType.PUSH_PTR:
+            ctx.stack.append((DataType.PTR, op.token))
+            ctx.ip += 1
+        elif op.typ == OpType.PUSH_INT:
             ctx.stack.append((DataType.INT, op.token))
             ctx.ip += 1
         elif op.typ == OpType.PUSH_STR:
@@ -818,11 +834,21 @@ def generate_nasm_linux_x86_64(program: Program, out_file_path: str):
         out.write("    mov [ret_stack_rsp], rax\n")
         for ip in range(len(program.ops)):
             op = program.ops[ip]
-            assert len(OpType) == 16, "Exhaustive ops handling in generate_nasm_linux_x86_64"
+            assert len(OpType) == 18, "Exhaustive ops handling in generate_nasm_linux_x86_64"
             out.write("addr_%d:\n" % ip)
             if op.typ == OpType.PUSH_INT:
                 assert isinstance(op.operand, int), "This could be a bug in the parsing step"
                 out.write("    ;; -- push int %d --\n" % op.operand)
+                out.write("    mov rax, %d\n" % op.operand)
+                out.write("    push rax\n")
+            elif op.typ == OpType.PUSH_BOOL:
+                assert isinstance(op.operand, bool), "This could be a bug in the parsing step"
+                out.write("    ;; -- push bool %d --\n" % int(op.operand))
+                out.write("    mov rax, %d\n" % int(op.operand))
+                out.write("    push rax\n")
+            elif op.typ == OpType.PUSH_PTR:
+                assert isinstance(op.operand, int), "This could be a bug in the parsing step"
+                out.write("    ;; -- push ptr %d --\n" % op.operand)
                 out.write("    mov rax, %d\n" % op.operand)
                 out.write("    push rax\n")
             elif op.typ == OpType.PUSH_STR:
@@ -1219,7 +1245,7 @@ def generate_nasm_linux_x86_64(program: Program, out_file_path: str):
         if program.memCapacity > 0:
             out.write("mem: resb %d\n" % program.memCapacity)
 
-assert len(Keyword) == 11, "Exhaustive KEYWORD_NAMES definition."
+assert len(Keyword) == 17, "Exhaustive KEYWORD_NAMES definition."
 KEYWORD_NAMES = {
     'if': Keyword.IF,
     'elif': Keyword.ELIF,
@@ -1232,9 +1258,15 @@ KEYWORD_NAMES = {
     'alloc': Keyword.MEMORY,
     'fn': Keyword.FUNCTION,
     'const': Keyword.CONST,
+    'offset': Keyword.OFFSET,
+    'reset': Keyword.RESET,
+    'assert': Keyword.ASSERT,
+    'true': Keyword.TRUE,
+    'false': Keyword.FALSE,
+    'null': Keyword.NULL,
 }
 
-assert len(Intrinsic) == 46, "Exhaustive INTRINSIC_BY_NAMES definition"
+assert len(Intrinsic) == 48, "Exhaustive INTRINSIC_BY_NAMES definition"
 INTRINSIC_BY_NAMES = {
     '+': Intrinsic.PLUS,
     '-': Intrinsic.MINUS,
@@ -1284,6 +1316,8 @@ INTRINSIC_BY_NAMES = {
     'call4': Intrinsic.SYSCALL4,
     'call5': Intrinsic.SYSCALL5,
     'call6': Intrinsic.SYSCALL6,
+    '[+]': Intrinsic.MAX,
+    '[-]': Intrinsic.MIN,
 }
 INTRINSIC_NAMES = {v: k for k, v in INTRINSIC_BY_NAMES.items()}
 
@@ -1308,6 +1342,7 @@ class Function:
 class Const:
     loc: Loc
     value: int
+    typ: DataType
 
 def check_valid_symbol(token: Token, name: str, macros: Dict[str, Macro], functions: Dict[str, Function], memories: Dict[str, Memory], consts: Dict[str, Const]):
     if name in macros:
@@ -1330,34 +1365,131 @@ def check_valid_symbol(token: Token, name: str, macros: Dict[str, Macro], functi
         compiler_error_with_expansion_stack(token, "redefinition of an intrinsic word `%s`. Please choose a different name for your macro." % (name, ))
         exit(1)
 
-def eval_expression(rtokens: List[Token], macros: Dict[str, Macro], consts: Dict[str, Const]) -> int:
-    stack: List[int] = []
+def eval_expression(rtokens: List[Token], macros: Dict[str, Macro], consts: Dict[str, Const], iota: List[int]) -> Tuple[int, DataType]:
+    stack: List[Tuple[int, DataType]] = []
     while len(rtokens) > 0:
         token = rtokens.pop()
         if token.typ == TokenType.KEYWORD:
             if token.value == Keyword.END:
                 break
-            assert False, "TODO: unsupported keyword"
+            elif token.value == Keyword.OFFSET:
+                if len(stack) < 1:
+                    compiler_error_with_expansion_stack(token, f"not enough arguments for `{KEYWORD_NAMES[str(token.value)]}` keyword")
+                    exit(1)
+                offset, t = stack.pop()
+                if t != DataType.INT:
+                    compiler_error_with_expansion_stack(token, f"Invalid argument types for `{token.value}` intrinsic: {t}")
+                    compiler_note(token.loc, f"Expected:")
+                    compiler_note(token.loc, f"  {DataType.INT}")
+                stack.append((iota[0], DataType.INT))
+                iota[0] += offset
+            elif token.value == Keyword.RESET:
+                stack.append((iota[0], DataType.INT))
+                iota[0] = 0
+            else:
+                assert False, "TODO: unsupported keyword"
         elif token.typ == TokenType.INT:
             assert isinstance(token.value, int)
-            stack.append(token.value)
+            stack.append((token.value, DataType.INT))
         elif token.typ == TokenType.WORD:
             assert isinstance(token.value, str), "lexer bug"
             if token.value == INTRINSIC_NAMES[Intrinsic.PLUS]:
-                a = stack.pop()
-                b = stack.pop()
-                stack.append(a + b)
+                a, a_t = stack.pop()
+                b, b_t = stack.pop()
+                if a_t == DataType.INT and b_t == DataType.INT:
+                    stack.append((a + b, DataType.INT))
+                elif a_t == DataType.INT and b_t == DataType.PTR:
+                    stack.append((a + b, DataType.PTR))
+                elif a_t == DataType.PTR and b_t == DataType.INT:
+                    stack.append((a + b, DataType.PTR))
+                else:
+                    compiler_error_with_expansion_stack(token, f"Invalid argument types for `{token.value}` intrinsic: {(a_type, b_type)}")
+                    compiler_note(token.loc, f"Expected:")
+                    compiler_note(token.loc, f"  {(DataType.INT, DataType.INT)}")
+                    compiler_note(token.loc, f"  {(DataType.INT, DataType.PTR)}")
+                    compiler_note(token.loc, f"  {(DataType.PTR, DataType.INT)}")
+                    exit(1)
             elif token.value == INTRINSIC_NAMES[Intrinsic.MUL]:
-                a = stack.pop()
-                b = stack.pop()
-                stack.append(a * b)
+                if len(stack) < 2:
+                    compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                    exit(1)
+                a, a_type = stack.pop()
+                b, b_type = stack.pop()
+                if a_type == b_type and a_type == DataType.INT:
+                    stack.append((a * b, DataType.INT))
+                else:
+                    compiler_error_with_expansion_stack(token, f"Invalid argument types for `{token.value}` intrinsic: {(a_type, b_type)}")
+                    compiler_note(token.loc, f"Expected:")
+                    compiler_note(token.loc, f"  {(DataType.INT, DataType.INT)}")
+                    exit(1)
+            elif token.value == INTRINSIC_NAMES[Intrinsic.DIV]:
+                if len(stack) < 2:
+                    compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                    exit(1)
+                a, a_type = stack.pop()
+                b, b_type = stack.pop()
+                if a_type == b_type and a_type == DataType.INT:
+                    stack.append((b//a, DataType.INT))
+                else:
+                    compiler_error_with_expansion_stack(token, f"Invalid argument types for `{token.value}` intrinsic: {(a_type, b_type)}")
+                    compiler_note(token.loc, f"Expected:")
+                    compiler_note(token.loc, f"  {(DataType.INT, DataType.INT)}")
+                    exit(1)
+            elif token.value == INTRINSIC_NAMES[Intrinsic.MOD]:
+                if len(stack) < 2:
+                    compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                    exit(1)
+                a, a_type = stack.pop()
+                b, b_type = stack.pop()
+                if a_type == b_type and a_type == DataType.INT:
+                    stack.append((b%a, DataType.INT))
+                else:
+                    compiler_error_with_expansion_stack(token, f"Invalid argument types for `{token.value}` intrinsic: {(a_type, b_type)}")
+                    compiler_note(token.loc, f"Expected:")
+                    compiler_note(token.loc, f"  {(DataType.INT, DataType.INT)}")
+                    exit(1)
+            elif token.value == INTRINSIC_NAMES[Intrinsic.DROP]:
+                if len(stack) < 1:
+                    compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                    exit(1)
+                stack.pop()
+            elif token.value == INTRINSIC_NAMES[Intrinsic.CAST_BOOL]:
+                if len(stack) < 1:
+                    compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                    exit(1)
+                value, typ = stack.pop()
+                stack.append((value, DataType.BOOL))
+            elif token.value == INTRINSIC_NAMES[Intrinsic.CAST_INT]:
+                if len(stack) < 1:
+                    compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                    exit(1)
+                value, typ = stack.pop()
+                stack.append((value, DataType.INT))
+            elif token.value == INTRINSIC_NAMES[Intrinsic.CAST_PTR]:
+                if len(stack) < 1:
+                    compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                    exit(1)
+                value, typ = stack.pop()
+                stack.append((value, DataType.PTR))
+            elif token.value == INTRINSIC_NAMES[Intrinsic.EQ]:
+                if len(stack) < 2:
+                    compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                    exit(1)
+                a, a_type = stack.pop()
+                b, b_type = stack.pop()
+                if a_type != b_type:
+                    compiler_error_with_expansion_stack(token, f"intrinsic `{token.value}` expects the arguments to have the same type. The actual types are")
+                    compiler_note(token.loc, f"    {(a_type, b_type)}")
+                    exit(1)
+                stack.append((int(a == b), DataType.BOOL))
             elif token.value in macros:
                 if token.expanded_count >= expansion_limit:
                     compiler_error_with_expansion_stack(token, "the macro exceeded the expansion limit (it expanded %d times)" % token.expanded_count)
                     exit(1)
                 rtokens += reversed(expand_macro(macros[token.value], token))
             elif token.value in consts:
-                stack.append(consts[token.value].value)
+                const = consts[token.value]
+                stack.append((const.value, const.typ))
             else:
                 assert False, f"TODO: unsupported intrinsic {token.value}"
         else:
@@ -1401,6 +1533,7 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
     consts: Dict[str, Const] = {}
     cur_proc: Optional[Function] = None
     ip: OpAddr = 0;
+    iota: List[int] = [0]
     while len(rtokens) > 0:
         token = rtokens.pop()
         assert len(TokenType) == 6, "Exhaustive token handling in parse_program_from_tokens"
@@ -1424,7 +1557,13 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                 program.ops.append(Op(typ=OpType.CALL, token=token, operand=functions[token.value].addr))
                 ip += 1
             elif token.value in consts:
-                program.ops.append(Op(typ=OpType.PUSH_INT, token=token, operand=consts[token.value].value))
+                c = consts[token.value]
+                if c.typ == DataType.INT:
+                    program.ops.append(Op(typ=OpType.PUSH_INT, token=token, operand=consts[token.value].value))
+                if c.typ == DataType.BOOL:
+                    program.ops.append(Op(typ=OpType.PUSH_BOOL, token=token, operand=consts[token.value].value))
+                if c.typ == DataType.PTR:
+                    program.ops.append(Op(typ=OpType.PUSH_PTR, token=token, operand=consts[token.value].value))
                 ip += 1
             else:
                 compiler_error_with_expansion_stack(token, "unknown word `%s`" % token.value)
@@ -1446,8 +1585,17 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
             program.ops.append(Op(typ=OpType.PUSH_INT, operand=token.value, token=token));
             ip += 1
         elif token.typ == TokenType.KEYWORD:
-            assert len(Keyword) == 11, "Exhaustive keywords handling in parse_program_from_tokens()"
-            if token.value == Keyword.IF:
+            assert len(Keyword) == 17, "Exhaustive keywords handling in parse_program_from_tokens()"
+            if token.value == Keyword.TRUE:
+                program.ops.append(Op(typ=OpType.PUSH_BOOL, operand=True, token=token))
+                ip += 1
+            elif token.value == Keyword.FALSE:
+                program.ops.append(Op(typ=OpType.PUSH_BOOL, operand=False, token=token))
+                ip += 1
+            elif token.value == Keyword.NULL:
+                program.ops.append(Op(typ=OpType.PUSH_PTR, operand=0, token=token))
+                ip += 1
+            elif token.value == Keyword.IF:
                 program.ops.append(Op(typ=OpType.IF, token=token))
                 stack.append(ip)
                 ip += 1
@@ -1578,7 +1726,10 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                 assert isinstance(token.value, str), "This is probably a bug in the lexer"
                 memname = token.value
                 memloc = token.loc
-                memsize = eval_expression(rtokens, macros, consts)
+                memsize, mem_size_type = eval_expression(rtokens, macros, consts, iota)
+                if mem_size_type != DataType.INT:
+                    compiler_error_with_expansion_stack(token, f"Memory size must be of type {DataType.INT} but it is of type {memory_size_type}")
+                    exit(1)
                 if cur_proc is None:
                     check_valid_symbol(token, token.value, macros, functions, memories, consts)
                     memories[memname] = Memory(memloc, program.memCapacity)
@@ -1599,8 +1750,8 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                 check_valid_symbol(token, token.value, macros, functions, memories, consts)
                 constname = token.value
                 constloc = token.loc
-                constsize = eval_expression(rtokens, macros, consts)
-                consts[constname] = Const(constloc, constsize)
+                constsize, const_type = eval_expression(rtokens, macros, consts, iota)
+                consts[constname] = Const(constloc, constsize, const_type)
             elif token.value == Keyword.MACRO:
                 if len(rtokens) == 0:
                     compiler_error_with_expansion_stack(token, "expected macro name but found nothing")
@@ -1653,7 +1804,29 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                 proc_loc = token.loc
                 functions[token.value] = Function(token.loc, proc_addr + 1, {}, 0)
                 cur_proc = functions[token.value]
+            elif token.value == Keyword.ASSERT:
+                if len(rtokens) == 0:
+                    compiler_error_with_expansion_stack(token, "expected procedure name but found nothing")
+                    exit(1)
+                assert_loc = token.loc
+                token = rtokens.pop()
+                if token.typ != TokenType.STR:
+                    compiler_error_with_expansion_stack(token, "expected assert message to be %s but found %s" % (human(TokenType.STR), human(token.typ)))
+                    exit(1)
+                assert isinstance(token.value, str), "This is probably a bug in the lexer"
+                assert_message = token.value
+                assert_value, assert_type = eval_expression(rtokens, macros, consts, iota)
+                if assert_type != DataType.BOOL:
+                    compiler_error_with_expansion_stack(token, f"assertion body must return type {DataType.INT} but it is of type {assert_type}")
+                    exit(1)
+                if assert_value == 0:
+                    compiler_error_with_expansion_stack(token, f"Static Assertion Failed: {assert_message}");
+                    exit(1)
+            elif token.value in [Keyword.OFFSET, Keyword.RESET]:
+                compiler_error_with_expansion_stack(token, f"keyword `{token.text}` is supported only in compile time evaluation context")
+                exit(1)
             else:
+                print(token)
                 assert False, 'unreachable';
         else:
             assert False, 'unreachable'

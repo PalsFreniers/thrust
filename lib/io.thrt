@@ -29,19 +29,19 @@ fn eputs
 end
 
 const PUTD_BUFF_CAP 32 end
-alloc putd[buff] sizeof(u8) PUTD_BUFF_CAP * end
 
 fn putd
+        alloc buff sizeof(u8) PUTD_BUFF_CAP * end
         if dup 0 = go
                 "0" puts
         else
-                putd[buff] PUTD_BUFF_CAP +
+                buff PUTD_BUFF_CAP +
                 during <+> 0 > go
                         1 - dup <->
                         dup 10 / <> 10 %
                         <-> <> '0' + <> .8 <>
                 end
                 dup
-                putd[buff] PUTD_BUFF_CAP + <> - <> puts
+                buff PUTD_BUFF_CAP + <> - <> puts
         end _
 end
