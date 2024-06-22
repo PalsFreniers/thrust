@@ -1438,117 +1438,176 @@ def eval_expression(rtokens: List[Token], macros: Dict[str, Macro], consts: Dict
             stack.append((token.value, DataType.INT))
         elif token.typ == TokenType.WORD:
             assert isinstance(token.value, str), "lexer bug"
-            if token.value == INTRINSIC_NAMES[Intrinsic.PLUS]:
-                a, a_t = stack.pop()
-                b, b_t = stack.pop()
-                if a_t == DataType.INT and b_t == DataType.INT:
-                    stack.append((a + b, DataType.INT))
-                elif a_t == DataType.INT and b_t == DataType.PTR:
-                    stack.append((a + b, DataType.PTR))
-                elif a_t == DataType.PTR and b_t == DataType.INT:
-                    stack.append((a + b, DataType.PTR))
+            if token.value in INTRINSIC_BY_NAMES:
+                if token.value == INTRINSIC_NAMES[Intrinsic.PLUS]:
+                    a, a_t = stack.pop()
+                    b, b_t = stack.pop()
+                    if a_t == DataType.INT and b_t == DataType.INT:
+                        stack.append((a + b, DataType.INT))
+                    elif a_t == DataType.INT and b_t == DataType.PTR:
+                        stack.append((a + b, DataType.PTR))
+                    elif a_t == DataType.PTR and b_t == DataType.INT:
+                        stack.append((a + b, DataType.PTR))
+                    else:
+                        compiler_error_with_expansion_stack(token, f"Invalid argument types for `{token.value}` intrinsic: {(a_t, b_t)}")
+                        compiler_note(token.loc, f"Expected:")
+                        compiler_note(token.loc, f"  {(DataType.INT, DataType.INT)}")
+                        compiler_note(token.loc, f"  {(DataType.INT, DataType.PTR)}")
+                        compiler_note(token.loc, f"  {(DataType.PTR, DataType.INT)}")
+                        exit(1)
+                elif token.value == INTRINSIC_NAMES[Intrinsic.MUL]:
+                    if len(stack) < 2:
+                        compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                        exit(1)
+                    a, a_type = stack.pop()
+                    b, b_type = stack.pop()
+                    if a_type == b_type and a_type == DataType.INT:
+                        stack.append((a * b, DataType.INT))
+                    else:
+                        compiler_error_with_expansion_stack(token, f"Invalid argument types for `{token.value}` intrinsic: {(a_type, b_type)}")
+                        compiler_note(token.loc, f"Expected:")
+                        compiler_note(token.loc, f"  {(DataType.INT, DataType.INT)}")
+                        exit(1)
+                elif token.value == INTRINSIC_NAMES[Intrinsic.DIV]:
+                    if len(stack) < 2:
+                        compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                        exit(1)
+                    a, a_type = stack.pop()
+                    b, b_type = stack.pop()
+                    if a_type == b_type and a_type == DataType.INT:
+                        stack.append((b//a, DataType.INT))
+                    else:
+                        compiler_error_with_expansion_stack(token, f"Invalid argument types for `{token.value}` intrinsic: {(a_type, b_type)}")
+                        compiler_note(token.loc, f"Expected:")
+                        compiler_note(token.loc, f"  {(DataType.INT, DataType.INT)}")
+                        exit(1)
+                elif token.value == INTRINSIC_NAMES[Intrinsic.MOD]:
+                    if len(stack) < 2:
+                        compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                        exit(1)
+                    a, a_type = stack.pop()
+                    b, b_type = stack.pop()
+                    if a_type == b_type and a_type == DataType.INT:
+                        stack.append((b%a, DataType.INT))
+                    else:
+                        compiler_error_with_expansion_stack(token, f"Invalid argument types for `{token.value}` intrinsic: {(a_type, b_type)}")
+                        compiler_note(token.loc, f"Expected:")
+                        compiler_note(token.loc, f"  {(DataType.INT, DataType.INT)}")
+                        exit(1)
+                elif token.value == INTRINSIC_NAMES[Intrinsic.DROP]:
+                    if len(stack) < 1:
+                        compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                        exit(1)
+                    stack.pop()
+                elif token.value == INTRINSIC_NAMES[Intrinsic.CAST_BOOL]:
+                    if len(stack) < 1:
+                        compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                        exit(1)
+                    value, typ = stack.pop()
+                    stack.append((value, DataType.BOOL))
+                elif token.value == INTRINSIC_NAMES[Intrinsic.CAST_INT]:
+                    if len(stack) < 1:
+                        compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                        exit(1)
+                    value, typ = stack.pop()
+                    stack.append((value, DataType.INT))
+                elif token.value == INTRINSIC_NAMES[Intrinsic.CAST_PTR]:
+                    if len(stack) < 1:
+                        compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                        exit(1)
+                    value, typ = stack.pop()
+                    stack.append((value, DataType.PTR))
+                elif token.value == INTRINSIC_NAMES[Intrinsic.EQ]:
+                    if len(stack) < 2:
+                        compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                        exit(1)
+                    a, a_type = stack.pop()
+                    b, b_type = stack.pop()
+                    if a_type != b_type:
+                        compiler_error_with_expansion_stack(token, f"intrinsic `{token.value}` expects the arguments to have the same type. The actual types are")
+                        compiler_note(token.loc, f"    {(a_type, b_type)}")
+                        exit(1)
+                    stack.append((int(a == b), DataType.BOOL))
+                elif token.value == INTRINSIC_NAMES[Intrinsic.NE]:
+                    if len(stack) < 2:
+                        compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                        exit(1)
+                    a, a_type = stack.pop()
+                    b, b_type = stack.pop()
+                    if a_type != b_type:
+                        compiler_error_with_expansion_stack(token, f"intrinsic `{token.value}` expects the arguments to have the same type. The actual types are")
+                        compiler_note(token.loc, f"    {(a_type, b_type)}")
+                        exit(1)
+                    stack.append((int(a != b), DataType.BOOL))
+                elif token.value == INTRINSIC_NAMES[Intrinsic.GT]:
+                    if len(stack) < 2:
+                        compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                        exit(1)
+                    a, a_type = stack.pop()
+                    b, b_type = stack.pop()
+                    if a_type != b_type:
+                        compiler_error_with_expansion_stack(token, f"intrinsic `{token.value}` expects the arguments to have the same type. The actual types are")
+                        compiler_note(token.loc, f"    {(a_type, b_type)}")
+                        exit(1)
+                    stack.append((int(b > a), DataType.BOOL))
+                elif token.value == INTRINSIC_NAMES[Intrinsic.LT]:
+                    if len(stack) < 2:
+                        compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                        exit(1)
+                    a, a_type = stack.pop()
+                    b, b_type = stack.pop()
+                    if a_type != b_type:
+                        compiler_error_with_expansion_stack(token, f"intrinsic `{token.value}` expects the arguments to have the same type. The actual types are")
+                        compiler_note(token.loc, f"    {(a_type, b_type)}")
+                        exit(1)
+                    stack.append((int(b < a), DataType.BOOL))
+                elif INTRINSIC_BY_NAMES[token.value] == Intrinsic.GE:
+                    if len(stack) < 2:
+                        compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                        exit(1)
+                    a, a_type = stack.pop()
+                    b, b_type = stack.pop()
+                    if a_type != b_type:
+                        compiler_error_with_expansion_stack(token, f"intrinsic `{token.value}` expects the arguments to have the same type. The actual types are")
+                        compiler_note(token.loc, f"    {(a_type, b_type)}")
+                        exit(1)
+                    stack.append((int(b >= a), DataType.BOOL))
+                elif INTRINSIC_BY_NAMES[token.value] == Intrinsic.LE:
+                    if len(stack) < 2:
+                        compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                        exit(1)
+                    a, a_type = stack.pop()
+                    b, b_type = stack.pop()
+                    if a_type != b_type:
+                        compiler_error_with_expansion_stack(token, f"intrinsic `{token.value}` expects the arguments to have the same type. The actual types are")
+                        compiler_note(token.loc, f"    {(a_type, b_type)}")
+                        exit(1)
+                    stack.append((int(b <= a), DataType.BOOL))
+                elif token.value == INTRINSIC_NAMES[Intrinsic.MIN]:
+                    if len(stack) < 2:
+                        compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                        exit(1)
+                    a, a_type = stack.pop()
+                    b, b_type = stack.pop()
+                    if a_type != b_type and a_type != DataType.INT:
+                        compiler_error_with_expansion_stack(token, f"intrinsic `{token.value}` expects the arguments to have the type INT. The actual types are")
+                        compiler_note(token.loc, f"    {(a_type, b_type)}")
+                        exit(1)
+                    stack.append((min(a, b), DataType.INT))
+                elif token.value == INTRINSIC_NAMES[Intrinsic.MAX]:
+                    if len(stack) < 2:
+                        compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                        exit(1)
+                    a, a_type = stack.pop()
+                    b, b_type = stack.pop()
+                    if a_type != b_type and a_type != DataType.INT:
+                        compiler_error_with_expansion_stack(token, f"intrinsic `{token.value}` expects the arguments to have the type INT. The actual types are")
+                        compiler_note(token.loc, f"    {(a_type, b_type)}")
+                        exit(1)
+                    stack.append((max(a, b), DataType.INT))
                 else:
-                    compiler_error_with_expansion_stack(token, f"Invalid argument types for `{token.value}` intrinsic: {(a_t, b_t)}")
-                    compiler_note(token.loc, f"Expected:")
-                    compiler_note(token.loc, f"  {(DataType.INT, DataType.INT)}")
-                    compiler_note(token.loc, f"  {(DataType.INT, DataType.PTR)}")
-                    compiler_note(token.loc, f"  {(DataType.PTR, DataType.INT)}")
+                    compiler_error_with_expansion_stack(token, f"TODO: Unsupported Intrinsic : {token.value}")
                     exit(1)
-            elif token.value == INTRINSIC_NAMES[Intrinsic.MUL]:
-                if len(stack) < 2:
-                    compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
-                    exit(1)
-                a, a_type = stack.pop()
-                b, b_type = stack.pop()
-                if a_type == b_type and a_type == DataType.INT:
-                    stack.append((a * b, DataType.INT))
-                else:
-                    compiler_error_with_expansion_stack(token, f"Invalid argument types for `{token.value}` intrinsic: {(a_type, b_type)}")
-                    compiler_note(token.loc, f"Expected:")
-                    compiler_note(token.loc, f"  {(DataType.INT, DataType.INT)}")
-                    exit(1)
-            elif token.value == INTRINSIC_NAMES[Intrinsic.DIV]:
-                if len(stack) < 2:
-                    compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
-                    exit(1)
-                a, a_type = stack.pop()
-                b, b_type = stack.pop()
-                if a_type == b_type and a_type == DataType.INT:
-                    stack.append((b//a, DataType.INT))
-                else:
-                    compiler_error_with_expansion_stack(token, f"Invalid argument types for `{token.value}` intrinsic: {(a_type, b_type)}")
-                    compiler_note(token.loc, f"Expected:")
-                    compiler_note(token.loc, f"  {(DataType.INT, DataType.INT)}")
-                    exit(1)
-            elif token.value == INTRINSIC_NAMES[Intrinsic.MOD]:
-                if len(stack) < 2:
-                    compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
-                    exit(1)
-                a, a_type = stack.pop()
-                b, b_type = stack.pop()
-                if a_type == b_type and a_type == DataType.INT:
-                    stack.append((b%a, DataType.INT))
-                else:
-                    compiler_error_with_expansion_stack(token, f"Invalid argument types for `{token.value}` intrinsic: {(a_type, b_type)}")
-                    compiler_note(token.loc, f"Expected:")
-                    compiler_note(token.loc, f"  {(DataType.INT, DataType.INT)}")
-                    exit(1)
-            elif token.value == INTRINSIC_NAMES[Intrinsic.DROP]:
-                if len(stack) < 1:
-                    compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
-                    exit(1)
-                stack.pop()
-            elif token.value == INTRINSIC_NAMES[Intrinsic.CAST_BOOL]:
-                if len(stack) < 1:
-                    compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
-                    exit(1)
-                value, typ = stack.pop()
-                stack.append((value, DataType.BOOL))
-            elif token.value == INTRINSIC_NAMES[Intrinsic.CAST_INT]:
-                if len(stack) < 1:
-                    compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
-                    exit(1)
-                value, typ = stack.pop()
-                stack.append((value, DataType.INT))
-            elif token.value == INTRINSIC_NAMES[Intrinsic.CAST_PTR]:
-                if len(stack) < 1:
-                    compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
-                    exit(1)
-                value, typ = stack.pop()
-                stack.append((value, DataType.PTR))
-            elif token.value == INTRINSIC_NAMES[Intrinsic.EQ]:
-                if len(stack) < 2:
-                    compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
-                    exit(1)
-                a, a_type = stack.pop()
-                b, b_type = stack.pop()
-                if a_type != b_type:
-                    compiler_error_with_expansion_stack(token, f"intrinsic `{token.value}` expects the arguments to have the same type. The actual types are")
-                    compiler_note(token.loc, f"    {(a_type, b_type)}")
-                    exit(1)
-                stack.append((int(a == b), DataType.BOOL))
-            elif token.value == INTRINSIC_NAMES[Intrinsic.MIN]:
-                if len(stack) < 2:
-                    compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
-                    exit(1)
-                a, a_type = stack.pop()
-                b, b_type = stack.pop()
-                if a_type != b_type and a_type != DataType.INT:
-                    compiler_error_with_expansion_stack(token, f"intrinsic `{token.value}` expects the arguments to have the type INT. The actual types are")
-                    compiler_note(token.loc, f"    {(a_type, b_type)}")
-                    exit(1)
-                stack.append((min(a, b), DataType.INT))
-            elif token.value == INTRINSIC_NAMES[Intrinsic.MAX]:
-                if len(stack) < 2:
-                    compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
-                    exit(1)
-                a, a_type = stack.pop()
-                b, b_type = stack.pop()
-                if a_type != b_type and a_type != DataType.INT:
-                    compiler_error_with_expansion_stack(token, f"intrinsic `{token.value}` expects the arguments to have the type INT. The actual types are")
-                    compiler_note(token.loc, f"    {(a_type, b_type)}")
-                    exit(1)
-                stack.append((max(a, b), DataType.INT))
             elif token.value in macros:
                 if token.expanded_count >= expansion_limit:
                     compiler_error_with_expansion_stack(token, "the macro exceeded the expansion limit (it expanded %d times)" % token.expanded_count)
@@ -1557,8 +1616,6 @@ def eval_expression(rtokens: List[Token], macros: Dict[str, Macro], consts: Dict
             elif token.value in consts:
                 const = consts[token.value]
                 stack.append((const.value, const.typ))
-            elif token.value in INTRINSIC_BY_NAMES:
-                assert False, f"TODO: unsupported intrinsic {token.value}"
             else:
                 compiler_error_with_expansion_stack(token, f"Unknwon word {token.value}")
                 exit(1)
