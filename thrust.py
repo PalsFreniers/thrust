@@ -1404,7 +1404,7 @@ def check_valid_symbol(token: Token, name: str, macros: Dict[str, Macro], functi
         compiler_error_with_expansion_stack(token, "redefinition of an intrinsic word `%s`. Please choose a different name for your macro." % (name, ))
         exit(1)
 
-def eval_expression(rtokens: List[Token], macros: Dict[str, Macro], consts: Dict[str, Const], iota: List[int]) -> Tuple[int, DataType]:
+def eval_expression(rtokens: List[Token], macros: Dict[str, Macro], consts: Dict[str, Const], funcs: Dict[str, Function], iota: List[int]) -> Tuple[int, DataType]:
     stack: List[Tuple[int, DataType]] = []
     while len(rtokens) > 0:
         token = rtokens.pop()
@@ -1616,8 +1616,11 @@ def eval_expression(rtokens: List[Token], macros: Dict[str, Macro], consts: Dict
             elif token.value in consts:
                 const = consts[token.value]
                 stack.append((const.value, const.typ))
+            elif token.value in funcs:
+                compiler_error_with_expansion_stack(token, f"function `{token.value}` can not be interpreted in compile time evaluation")
+                exit(1)
             else:
-                compiler_error_with_expansion_stack(token, f"Unknwon word {token.value}")
+                compiler_error_with_expansion_stack(token, f"Unknwon compile time word `{token.value}`")
                 exit(1)
         else:
             assert False, "TODO: unsupported token"
@@ -1853,9 +1856,9 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                 assert isinstance(token.value, str), "This is probably a bug in the lexer"
                 memname = token.value
                 memloc = token.loc
-                memsize, mem_size_type = eval_expression(rtokens, macros, consts, iota)
+                memsize, mem_size_type = eval_expression(rtokens, macros, consts, functions, iota)
                 if mem_size_type != DataType.INT:
-                    compiler_error_with_expansion_stack(token, f"Memory size must be of type {DataType.INT} but it is of type {memory_size_type}")
+                    compiler_error_with_expansion_stack(token, f"Memory size must be of type {DataType.INT} but it is of type {mem_size_type}")
                     exit(1)
                 if cur_proc is None:
                     check_valid_symbol(token, token.value, macros, functions, memories, consts)
@@ -1877,7 +1880,7 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                 check_valid_symbol(token, token.value, macros, functions, memories, consts)
                 constname = token.value
                 constloc = token.loc
-                constsize, const_type = eval_expression(rtokens, macros, consts, iota)
+                constsize, const_type = eval_expression(rtokens, macros, consts, functions, iota)
                 consts[constname] = Const(constloc, constsize, const_type)
             elif token.value == Keyword.MACRO:
                 if len(rtokens) == 0:
@@ -1942,7 +1945,7 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                     exit(1)
                 assert isinstance(token.value, str), "This is probably a bug in the lexer"
                 assert_message = token.value
-                assert_value, assert_type = eval_expression(rtokens, macros, consts, iota)
+                assert_value, assert_type = eval_expression(rtokens, macros, consts, functions, iota)
                 if assert_type != DataType.BOOL:
                     compiler_error_with_expansion_stack(token, f"assertion body must return type {DataType.INT} but it is of type {assert_type}")
                     exit(1)
