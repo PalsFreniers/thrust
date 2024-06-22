@@ -1,0 +1,109 @@
+const KEYWORD_IF       1 offset end
+const KEYWORD_ELIF     1 offset end
+const KEYWORD_ELSE     1 offset end
+const KEYWORD_END      1 offset end
+const KEYWORD_WHILE    1 offset end
+const KEYWORD_DO       1 offset end
+const KEYWORD_MACRO    1 offset end
+const KEYWORD_INCLUDE  1 offset end
+const KEYWORD_MEMORY   1 offset end
+const KEYWORD_FUNCTION 1 offset end
+const KEYWORD_CONST    1 offset end
+const KEYWORD_OFFSET   1 offset end
+const KEYWORD_RESET    1 offset end
+const KEYWORD_ASSERT   1 offset end
+const KEYWORD_TRUE     1 offset end
+const KEYWORD_FALSE    1 offset end
+const KEYWORD_NULL     1 offset end
+const KEYWORD_COUNT       reset  end
+const sizeof(Keyword) sizeof(u8) end
+assert "Exhaustive handling of keyword" KEYWORD_COUNT 17 = end
+
+const DATATYPE_BOOL  1 offset end
+const DATATYPE_INT   1 offset end
+const DATATYPE_PTR   1 offset end
+const DATATYPE_COUNT   reset  end
+const sizeof(DataType) sizeof(u8) end
+assert "Exhaustive handling of datatype" DATATYPE_COUNT 3 = end
+
+const INTRINSIC_PLUS      1 offset end
+const INTRINSIC_MINUS     1 offset end
+const INTRINSIC_MUL       1 offset end
+const INTRINSIC_DIV       1 offset end
+const INTRINSIC_MOD       1 offset end
+const INTRINSIC_DUP       1 offset end
+const INTRINSIC_SWAP      1 offset end
+const INTRINSIC_SWAP2     1 offset end
+const INTRINSIC_OVER      1 offset end
+const INTRINSIC_ROT       1 offset end
+const INTRINSIC_PRINT     1 offset end
+const INTRINSIC_EQ        1 offset end
+const INTRINSIC_GT        1 offset end
+const INTRINSIC_LT        1 offset end
+const INTRINSIC_GE        1 offset end
+const INTRINSIC_LE        1 offset end
+const INTRINSIC_NE        1 offset end
+const INTRINSIC_INV       1 offset end
+const INTRINSIC_DROP      1 offset end
+const INTRINSIC_LOAD      1 offset end
+const INTRINSIC_LOAD16    1 offset end
+const INTRINSIC_LOAD32    1 offset end
+const INTRINSIC_LOAD64    1 offset end
+const INTRINSIC_STORE     1 offset end
+const INTRINSIC_STORE16   1 offset end
+const INTRINSIC_STORE32   1 offset end
+const INTRINSIC_STORE64   1 offset end
+const INTRINSIC_SYSCALL0  1 offset end
+const INTRINSIC_SYSCALL1  1 offset end
+const INTRINSIC_SYSCALL2  1 offset end
+const INTRINSIC_SYSCALL3  1 offset end
+const INTRINSIC_SYSCALL4  1 offset end
+const INTRINSIC_SYSCALL5  1 offset end
+const INTRINSIC_SYSCALL6  1 offset end
+const INTRINSIC_ARGC      1 offset end
+const INTRINSIC_ARGV      1 offset end
+const INTRINSIC_SHR       1 offset end
+const INTRINSIC_SHL       1 offset end
+const INTRINSIC_AND       1 offset end
+const INTRINSIC_OR        1 offset end
+const INTRINSIC_NOT       1 offset end
+const INTRINSIC_XOR       1 offset end
+const INTRINSIC_HERE      1 offset end
+const INTRINSIC_CAST_PTR  1 offset end
+const INTRINSIC_CAST_INT  1 offset end
+const INTRINSIC_CAST_BOOL 1 offset end
+const INTRINSIC_COUNT       reset  end
+const sizeof(Intrinsic) sizeof(u8) end
+assert "Exhaustive handling of intrinsics" INTRINSIC_COUNT 46 = end
+
+const OPTYPE_PUSH_BOOL      1 offset end
+const OPTYPE_PUSH_PTR       1 offset end
+const OPTYPE_PUSH_INT       1 offset end
+const OPTYPE_PUSH_STR       1 offset end
+const OPTYPE_PUSH_CSTR      1 offset end
+const OPTYPE_PUSH_MEM       1 offset end
+const OPTYPE_PUSH_LOCAL_MEM 1 offset end
+const OPTYPE_INTRINSIC      1 offset end
+const OPTYPE_IF             1 offset end
+const OPTYPE_ELIF           1 offset end
+const OPTYPE_ELSE           1 offset end
+const OPTYPE_END            1 offset end
+const OPTYPE_WHILE          1 offset end
+const OPTYPE_DO             1 offset end
+const OPTYPE_FUNCTION       1 offset end
+const OPTYPE_STACK_FRAME    1 offset end
+const OPTYPE_RETURN         1 offset end
+const OPTYPE_CALL           1 offset end
+const OPTYPE_COUNT            reset  end
+const sizeof(OpType) sizeof(u8) end
+assert "Exhaustive handling of optype" OPTYPE_COUNT 18 = end
+
+const TOKENTYPE_INT     1 offset end
+const TOKENTYPE_STR     1 offset end
+const TOKENTYPE_WORD    1 offset end
+const TOKENTYPE_CSTR    1 offset end
+const TOKENTYPE_CHAR    1 offset end
+const TOKENTYPE_KEYWORD 1 offset end
+const TOKENTYPE_COUNT     reset  end
+const sizeof(TokenType) sizeof(u8) end
+assert "Exhaustive handling of tokentype" TOKENTYPE_COUNT 6 = end

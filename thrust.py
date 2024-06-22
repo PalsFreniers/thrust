@@ -1425,14 +1425,14 @@ def eval_expression(rtokens: List[Token], macros: Dict[str, Macro], consts: Dict
             elif token.value == Keyword.RESET:
                 stack.append((iota[0], DataType.INT))
                 iota[0] = 0
-            elif token.value == Keyword.FALSE:
-                stack.append((0, DataType.BOOL))
             elif token.value == Keyword.TRUE:
                 stack.append((1, DataType.BOOL))
+            elif token.value == Keyword.FALSE:
+                stack.append((0, DataType.BOOL))
             elif token.value == Keyword.NULL:
                 stack.append((0, DataType.PTR))
             else:
-                assert False, "TODO: unsupported keyword"
+                assert False, f"TODO: unsupported keyword {token.value} in compile time evaluations"
         elif token.typ == TokenType.INT:
             assert isinstance(token.value, int)
             stack.append((token.value, DataType.INT))
@@ -1448,7 +1448,7 @@ def eval_expression(rtokens: List[Token], macros: Dict[str, Macro], consts: Dict
                 elif a_t == DataType.PTR and b_t == DataType.INT:
                     stack.append((a + b, DataType.PTR))
                 else:
-                    compiler_error_with_expansion_stack(token, f"Invalid argument types for `{token.value}` intrinsic: {(a_type, b_type)}")
+                    compiler_error_with_expansion_stack(token, f"Invalid argument types for `{token.value}` intrinsic: {(a_t, b_t)}")
                     compiler_note(token.loc, f"Expected:")
                     compiler_note(token.loc, f"  {(DataType.INT, DataType.INT)}")
                     compiler_note(token.loc, f"  {(DataType.INT, DataType.PTR)}")
@@ -1557,13 +1557,15 @@ def eval_expression(rtokens: List[Token], macros: Dict[str, Macro], consts: Dict
             elif token.value in consts:
                 const = consts[token.value]
                 stack.append((const.value, const.typ))
-            else:
+            elif token.value in INTRINSIC_BY_NAMES:
                 assert False, f"TODO: unsupported intrinsic {token.value}"
+            else:
+                compiler_error_with_expansion_stack(token, f"Unknwon word {token.value}")
+                exit(1)
         else:
             assert False, "TODO: unsupported token"
     if len(stack) != 1:
         assert False, "TODO: error in const evaluation stack"
-    print(f"{stack[-1]}")
     return stack.pop()
 
 def human(obj: Union[TokenType, Op, Intrinsic]) -> str:
@@ -1840,7 +1842,7 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                     else:
                         macro.tokens.append(token)
                         if token.typ == TokenType.KEYWORD:
-                            assert len(Keyword) == 10, "Exhaustive handling of keyword in parsing macro body nest"
+                            assert len(Keyword) == 17, "Exhaustive handling of keyword in parsing macro body nest"
                             if token.value in [Keyword.IF, Keyword.WHILE, Keyword.MACRO, Keyword.MEMORY, Keyword.FUNCTION]:
                                 nesting_depth += 1
                             elif token.value == Keyword.END:
