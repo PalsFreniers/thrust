@@ -31,7 +31,7 @@ define fstat
 end
 
 define mmap
-        sys_mmap call6
+        sys_mmap call6 @ptr
 end
 
 define munmap

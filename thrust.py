@@ -787,6 +787,7 @@ def type_check_program(program: Program):
                 expected_types = list(map(lambda x: x[0], visited_dos[ctx.ip]))
                 actual_types = list(map(lambda x: x[0], ctx.stack))
                 if expected_types != actual_types:
+                    print(ctx.stack)
                     compiler_error_with_expansion_stack(op.token, 'Loops are not allowed to alter types and amount of elements on the stack.')
                     compiler_note(op.token.loc, 'Expected elements: %s' % expected_types)
 #                     for c in visited_dos[ctx.ip]:
@@ -1040,7 +1041,7 @@ def generate_nasm_linux_x86_64(program: Program, out_file_path: str):
                     out.write("    pop rdi\n")
                     out.write("    call print\n")
                 elif op.operand == Intrinsic.INV:
-                    out.write("    ;; -- equal --\n")
+                    out.write("    ;; -- inv --\n")
                     out.write("    mov rcx, 0\n");
                     out.write("    mov rdx, 1\n");
                     out.write("    pop rax\n");

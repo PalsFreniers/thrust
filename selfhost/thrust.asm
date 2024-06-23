@@ -520,7 +520,7 @@ addr_92:
     cmove rcx, rdx
     push rcx
 addr_93:
-    ;; -- equal --
+    ;; -- inv --
     mov rcx, 0
     mov rdx, 1
     pop rax
@@ -803,7 +803,7 @@ addr_145:
     cmove rcx, rdx
     push rcx
 addr_146:
-    ;; -- equal --
+    ;; -- inv --
     mov rcx, 0
     mov rdx, 1
     pop rax
@@ -970,7 +970,7 @@ addr_179:
     cmove rcx, rdx
     push rcx
 addr_180:
-    ;; -- equal --
+    ;; -- inv --
     mov rcx, 0
     mov rdx, 1
     pop rax
@@ -2155,31 +2155,24 @@ addr_409:
     ret
 addr_410:
     ;; -- func --
-    jmp addr_437
+    jmp addr_435
 addr_411:
     ;; -- stack prep --
     sub rsp, 9
     mov [ret_stack_rsp], rsp
     mov rsp, rax
 addr_412:
-    ;; -- rot --
-    pop rax
-    pop rbx
-    pop rcx
-    push rbx
-    push rax
-    push rcx
-addr_413:
-    ;; -- rot --
-    pop rax
-    pop rbx
-    pop rcx
-    push rbx
-    push rax
-    push rcx
-addr_414:
     mov rax, [ret_stack_rsp]
     add rax, 0
+    push rax
+addr_413:
+    ;; -- store64 --
+    pop rax
+    pop rbx
+    mov [rax], rbx
+addr_414:
+    mov rax, [ret_stack_rsp]
+    add rax, 8
     push rax
 addr_415:
     ;; -- store --
@@ -2187,26 +2180,17 @@ addr_415:
     pop rbx
     mov [rax], bl
 addr_416:
-    mov rax, [ret_stack_rsp]
-    add rax, 1
-    push rax
-addr_417:
-    ;; -- store64 --
-    pop rax
-    pop rbx
-    mov [rax], rbx
-addr_418:
     ;; -- while --
-addr_419:
+addr_417:
     ;; -- dup --
     pop rax
     push rax
     push rax
-addr_420:
+addr_418:
     ;; -- push int 0 --
     mov rax, 0
     push rax
-addr_421:
+addr_419:
     ;; -- ne --
     mov rcx, 0
     mov rdx, 1
@@ -2215,88 +2199,97 @@ addr_421:
     cmp rax, rbx
     cmovne rcx, rdx
     push rcx
-addr_422:
+addr_420:
     ;; -- do --
     pop rax
     test rax, rax
-    jz addr_435
-addr_423:
+    jz addr_433
+addr_421:
     ;; -- push int 1 --
     mov rax, 1
     push rax
-addr_424:
+addr_422:
     ;; -- minus --
     pop rax
     pop rbx
     sub rbx, rax
     push rbx
-addr_425:
+addr_423:
     ;; -- dup --
     pop rax
     push rax
     push rax
-addr_426:
+addr_424:
     mov rax, [ret_stack_rsp]
-    add rax, 1
+    add rax, 0
     push rax
-addr_427:
+addr_425:
     ;; -- load64 --
     pop rax
     xor rbx, rbx
     mov rbx, [rax]
     push rbx
-addr_428:
+addr_426:
     ;; -- cast(ptr) --
-addr_429:
+addr_427:
     ;; -- plus --
     pop rax
     pop rbx
     add rax, rbx
     push rax
-addr_430:
+addr_428:
     mov rax, [ret_stack_rsp]
-    add rax, 0
+    add rax, 8
     push rax
-addr_431:
+addr_429:
     ;; -- load --
     pop rax
     xor rbx, rbx
     mov bl, [rax]
     push rbx
-addr_432:
+addr_430:
     ;; -- swap --
     pop rax
     pop rbx
     push rax
     push rbx
-addr_433:
+addr_431:
     ;; -- store --
     pop rax
     pop rbx
     mov [rax], bl
-addr_434:
+addr_432:
     ;; -- end --
-    jmp addr_418
-addr_435:
+    jmp addr_416
+addr_433:
     ;; -- drop --
     pop rax
-addr_436:
+addr_434:
     ;; -- return --
     mov rax, rsp
     mov rsp, [ret_stack_rsp]
     add rsp, 9
     ret
-addr_437:
+addr_435:
     ;; -- func --
-    jmp addr_469
-addr_438:
+    jmp addr_467
+addr_436:
     ;; -- stack prep --
     sub rsp, 24
     mov [ret_stack_rsp], rsp
     mov rsp, rax
-addr_439:
+addr_437:
     mov rax, [ret_stack_rsp]
     add rax, 0
+    push rax
+addr_438:
+    ;; -- store64 --
+    pop rax
+    pop rbx
+    mov [rax], rbx
+addr_439:
+    mov rax, [ret_stack_rsp]
+    add rax, 8
     push rax
 addr_440:
     ;; -- store64 --
@@ -2305,7 +2298,7 @@ addr_440:
     mov [rax], rbx
 addr_441:
     mov rax, [ret_stack_rsp]
-    add rax, 8
+    add rax, 16
     push rax
 addr_442:
     ;; -- store64 --
@@ -2313,36 +2306,27 @@ addr_442:
     pop rbx
     mov [rax], rbx
 addr_443:
-    mov rax, [ret_stack_rsp]
-    add rax, 16
-    push rax
-addr_444:
-    ;; -- store64 --
-    pop rax
-    pop rbx
-    mov [rax], rbx
-addr_445:
     ;; -- push int 0 --
     mov rax, 0
     push rax
-addr_446:
+addr_444:
     ;; -- while --
-addr_447:
+addr_445:
     ;; -- dup --
     pop rax
     push rax
     push rax
-addr_448:
+addr_446:
     mov rax, [ret_stack_rsp]
     add rax, 16
     push rax
-addr_449:
+addr_447:
     ;; -- load64 --
     pop rax
     xor rbx, rbx
     mov rbx, [rax]
     push rbx
-addr_450:
+addr_448:
     ;; -- gt --
     mov rcx, 0
     mov rdx, 1
@@ -2351,210 +2335,205 @@ addr_450:
     cmp rax, rbx
     cmovl rcx, rdx
     push rcx
-addr_451:
+addr_449:
     ;; -- do --
     pop rax
     test rax, rax
-    jz addr_467
-addr_452:
+    jz addr_465
+addr_450:
     ;; -- dup --
     pop rax
     push rax
     push rax
-addr_453:
+addr_451:
     mov rax, [ret_stack_rsp]
     add rax, 8
     push rax
-addr_454:
+addr_452:
     ;; -- load64 --
     pop rax
     xor rbx, rbx
     mov rbx, [rax]
     push rbx
-addr_455:
+addr_453:
     ;; -- cast(ptr) --
-addr_456:
+addr_454:
     ;; -- plus --
     pop rax
     pop rbx
     add rax, rbx
     push rax
-addr_457:
+addr_455:
     ;; -- load --
     pop rax
     xor rbx, rbx
     mov bl, [rax]
     push rbx
-addr_458:
+addr_456:
     ;; -- over --
     pop rax
     pop rbx
     push rbx
     push rax
     push rbx
-addr_459:
+addr_457:
     mov rax, [ret_stack_rsp]
     add rax, 0
     push rax
-addr_460:
+addr_458:
     ;; -- load64 --
     pop rax
     xor rbx, rbx
     mov rbx, [rax]
     push rbx
-addr_461:
+addr_459:
     ;; -- cast(ptr) --
-addr_462:
+addr_460:
     ;; -- plus --
     pop rax
     pop rbx
     add rax, rbx
     push rax
-addr_463:
+addr_461:
     ;; -- store --
     pop rax
     pop rbx
     mov [rax], bl
-addr_464:
+addr_462:
     ;; -- push int 1 --
     mov rax, 1
     push rax
-addr_465:
+addr_463:
     ;; -- plus --
     pop rax
     pop rbx
     add rax, rbx
     push rax
-addr_466:
+addr_464:
     ;; -- end --
-    jmp addr_446
-addr_467:
+    jmp addr_444
+addr_465:
     ;; -- drop --
     pop rax
-addr_468:
+addr_466:
     ;; -- return --
     mov rax, rsp
     mov rsp, [ret_stack_rsp]
     add rsp, 24
     ret
-addr_469:
+addr_467:
     ;; -- func --
-    jmp addr_494
-addr_470:
+    jmp addr_488
+addr_468:
     ;; -- stack prep --
+    sub rsp, 12
     mov [ret_stack_rsp], rsp
     mov rsp, rax
-addr_471:
-    ;; -- push str --
-    mov rax, 8
+addr_469:
+    mov rax, [ret_stack_rsp]
+    add rax, 0
     push rax
-    push str_1
+addr_470:
+    ;; -- store64 --
+    pop rax
+    pop rbx
+    mov [rax], rbx
+addr_471:
+    mov rax, [ret_stack_rsp]
+    add rax, 8
+    push rax
 addr_472:
-    ;; -- call --
-    mov rax, rsp
-    mov rsp, [ret_stack_rsp]
-    call addr_312
-    mov [ret_stack_rsp], rsp
-    mov rsp, rax
+    ;; -- store --
+    pop rax
+    pop rbx
+    mov [rax], ebx
 addr_473:
     ;; -- push int 0 --
     mov rax, 0
     push rax
 addr_474:
-    ;; -- push int 8 --
-    mov rax, 8
-    push rax
-addr_475:
-    ;; -- mul --
-    pop rax
-    pop rbx
-    mul rbx
-    push rax
-addr_476:
-    ;; -- argv --
-    mov rax, [args_ptr]
+    mov rax, [ret_stack_rsp]
     add rax, 8
     push rax
-addr_477:
-    ;; -- plus --
+addr_475:
+    ;; -- load --
     pop rax
-    pop rbx
-    add rax, rbx
+    xor rbx, rbx
+    mov ebx, [rax]
+    push rbx
+addr_476:
+    ;; -- push int 2 --
+    mov rax, 2
+    push rax
+addr_477:
+    ;; -- push int 1 --
+    mov rax, 1
     push rax
 addr_478:
+    mov rax, [ret_stack_rsp]
+    add rax, 0
+    push rax
+addr_479:
     ;; -- load64 --
     pop rax
     xor rbx, rbx
     mov rbx, [rax]
     push rbx
-addr_479:
-    ;; -- cast(ptr) --
 addr_480:
-    ;; -- dup --
-    pop rax
-    push rax
+    ;; -- push int 44 --
+    mov rax, 44
     push rax
 addr_481:
-    ;; -- call --
-    mov rax, rsp
-    mov rsp, [ret_stack_rsp]
-    call addr_1
-    mov [ret_stack_rsp], rsp
-    mov rsp, rax
-addr_482:
-    ;; -- swap --
+    ;; -- plus --
     pop rax
     pop rbx
+    add rax, rbx
     push rax
+addr_482:
+    ;; -- load64 --
+    pop rax
+    xor rbx, rbx
+    mov rbx, [rax]
     push rbx
 addr_483:
-    ;; -- call --
-    mov rax, rsp
-    mov rsp, [ret_stack_rsp]
-    call addr_312
-    mov [ret_stack_rsp], rsp
-    mov rsp, rax
+    ;; -- push ptr 0 --
+    mov rax, 0
+    push rax
 addr_484:
-    ;; -- push str --
-    mov rax, 23
+    ;; -- push int 9 --
+    mov rax, 9
     push rax
-    push str_2
 addr_485:
-    ;; -- call --
-    mov rax, rsp
-    mov rsp, [ret_stack_rsp]
-    call addr_312
-    mov [ret_stack_rsp], rsp
-    mov rsp, rax
+    ;; -- syscall6 --
+    pop rax
+    pop rdi
+    pop rsi
+    pop rdx
+    pop r10
+    pop r8
+    pop r9
+    syscall
+    push rax
 addr_486:
-    ;; -- push str --
-    mov rax, 10
-    push rax
-    push str_3
+    ;; -- cast(ptr) --
 addr_487:
-    ;; -- call --
+    ;; -- return --
     mov rax, rsp
     mov rsp, [ret_stack_rsp]
-    call addr_312
-    mov [ret_stack_rsp], rsp
-    mov rsp, rax
+    add rsp, 12
+    ret
 addr_488:
-    ;; -- push str --
-    mov rax, 40
-    push rax
-    push str_4
+    ;; -- func --
+    jmp addr_512
 addr_489:
-    ;; -- call --
-    mov rax, rsp
-    mov rsp, [ret_stack_rsp]
-    call addr_312
+    ;; -- stack prep --
     mov [ret_stack_rsp], rsp
     mov rsp, rax
 addr_490:
     ;; -- push str --
-    mov rax, 37
+    mov rax, 8
     push rax
-    push str_5
+    push str_1
 addr_491:
     ;; -- call --
     mov rax, rsp
@@ -2563,546 +2542,1232 @@ addr_491:
     mov [ret_stack_rsp], rsp
     mov rsp, rax
 addr_492:
-    ;; -- call --
-    mov rax, rsp
-    mov rsp, [ret_stack_rsp]
-    call addr_312
-    mov [ret_stack_rsp], rsp
-    mov rsp, rax
-addr_493:
-    ;; -- return --
-    mov rax, rsp
-    mov rsp, [ret_stack_rsp]
-    ret
-addr_494:
-    ;; -- func --
-    jmp addr_604
-addr_495:
-    ;; -- stack prep --
-    mov [ret_stack_rsp], rsp
-    mov rsp, rax
-addr_496:
-    ;; -- push bool 0 --
-    mov rax, 0
-    push rax
-addr_497:
-    ;; -- cast(int) --
-addr_498:
-    ;; -- push mem --
-    mov rax, mem
-    add rax, 32
-    push rax
-addr_499:
-    ;; -- store --
-    pop rax
-    pop rbx
-    mov [rax], bl
-addr_500:
-    ;; -- push mem --
-    mov rax, mem
-    add rax, 33
-    push rax
-addr_501:
     ;; -- push int 0 --
     mov rax, 0
     push rax
-addr_502:
-    ;; -- push int 256 --
-    mov rax, 256
-    push rax
-addr_503:
-    ;; -- call --
-    mov rax, rsp
-    mov rsp, [ret_stack_rsp]
-    call addr_411
-    mov [ret_stack_rsp], rsp
-    mov rsp, rax
-addr_504:
-    ;; -- if --
-addr_505:
-    ;; -- argc --
-    mov rax, [args_ptr]
-    mov rax, [rax]
-    push rax
-addr_506:
-    ;; -- push int 2 --
-    mov rax, 2
-    push rax
-addr_507:
-    ;; -- gt --
-    mov rcx, 0
-    mov rdx, 1
-    pop rbx
-    pop rax
-    cmp rax, rbx
-    cmovl rcx, rdx
-    push rcx
-addr_508:
-    ;; -- do --
-    pop rax
-    test rax, rax
-    jz addr_516
-addr_509:
-    ;; -- push str --
-    mov rax, 32
-    push rax
-    push str_6
-addr_510:
-    ;; -- call --
-    mov rax, rsp
-    mov rsp, [ret_stack_rsp]
-    call addr_470
-    mov [ret_stack_rsp], rsp
-    mov rsp, rax
-addr_511:
-    ;; -- push int 1 --
-    mov rax, 1
-    push rax
-addr_512:
-    ;; -- push int 60 --
-    mov rax, 60
-    push rax
-addr_513:
-    ;; -- syscall1 --
-    pop rax
-    pop rdi
-    syscall
-    push rax
-addr_514:
-    ;; -- drop --
-    pop rax
-addr_515:
-    ;; -- end --
-addr_516:
-    ;; -- if --
-addr_517:
-    ;; -- argc --
-    mov rax, [args_ptr]
-    mov rax, [rax]
-    push rax
-addr_518:
-    ;; -- push int 2 --
-    mov rax, 2
-    push rax
-addr_519:
-    ;; -- gt --
-    mov rcx, 0
-    mov rdx, 1
-    pop rbx
-    pop rax
-    cmp rax, rbx
-    cmovg rcx, rdx
-    push rcx
-addr_520:
-    ;; -- do --
-    pop rax
-    test rax, rax
-    jz addr_596
-addr_521:
-    ;; -- push int 1 --
-    mov rax, 1
-    push rax
-addr_522:
-    ;; -- while --
-addr_523:
-    ;; -- dup --
-    pop rax
-    push rax
-    push rax
-addr_524:
-    ;; -- argc --
-    mov rax, [args_ptr]
-    mov rax, [rax]
-    push rax
-addr_525:
-    ;; -- push int 1 --
-    mov rax, 1
-    push rax
-addr_526:
-    ;; -- minus --
-    pop rax
-    pop rbx
-    sub rbx, rax
-    push rbx
-addr_527:
-    ;; -- gt --
-    mov rcx, 0
-    mov rdx, 1
-    pop rbx
-    pop rax
-    cmp rax, rbx
-    cmovl rcx, rdx
-    push rcx
-addr_528:
-    ;; -- do --
-    pop rax
-    test rax, rax
-    jz addr_594
-addr_529:
-    ;; -- if --
-addr_530:
-    ;; -- dup --
-    pop rax
-    push rax
-    push rax
-addr_531:
+addr_493:
     ;; -- push int 8 --
     mov rax, 8
     push rax
-addr_532:
+addr_494:
     ;; -- mul --
     pop rax
     pop rbx
     mul rbx
     push rax
-addr_533:
+addr_495:
     ;; -- argv --
     mov rax, [args_ptr]
     add rax, 8
     push rax
-addr_534:
+addr_496:
     ;; -- plus --
     pop rax
     pop rbx
     add rax, rbx
     push rax
-addr_535:
+addr_497:
     ;; -- load64 --
     pop rax
     xor rbx, rbx
     mov rbx, [rax]
     push rbx
-addr_536:
+addr_498:
     ;; -- cast(ptr) --
-addr_537:
-    ;; -- push str --
-    push str_7
-addr_538:
-    ;; -- call --
-    mov rax, rsp
-    mov rsp, [ret_stack_rsp]
-    call addr_25
-    mov [ret_stack_rsp], rsp
-    mov rsp, rax
-addr_539:
-    ;; -- do --
-    pop rax
-    test rax, rax
-    jz addr_545
-addr_540:
-    ;; -- push bool 1 --
-    mov rax, 1
-    push rax
-addr_541:
-    ;; -- cast(int) --
-addr_542:
-    ;; -- push mem --
-    mov rax, mem
-    add rax, 32
-    push rax
-addr_543:
-    ;; -- store --
-    pop rax
-    pop rbx
-    mov [rax], bl
-addr_544:
-    ;; -- elif --
-    jmp addr_583
-addr_545:
+addr_499:
     ;; -- dup --
     pop rax
     push rax
     push rax
-addr_546:
-    ;; -- push int 8 --
-    mov rax, 8
-    push rax
-addr_547:
-    ;; -- mul --
-    pop rax
-    pop rbx
-    mul rbx
-    push rax
-addr_548:
-    ;; -- argv --
-    mov rax, [args_ptr]
-    add rax, 8
-    push rax
-addr_549:
-    ;; -- plus --
-    pop rax
-    pop rbx
-    add rax, rbx
-    push rax
-addr_550:
-    ;; -- load64 --
-    pop rax
-    xor rbx, rbx
-    mov rbx, [rax]
-    push rbx
-addr_551:
-    ;; -- cast(ptr) --
-addr_552:
-    ;; -- push str --
-    push str_8
-addr_553:
-    ;; -- call --
-    mov rax, rsp
-    mov rsp, [ret_stack_rsp]
-    call addr_25
-    mov [ret_stack_rsp], rsp
-    mov rsp, rax
-addr_554:
-    ;; -- do --
-    pop rax
-    test rax, rax
-    jz addr_584
-addr_555:
-    ;; -- if --
-addr_556:
-    ;; -- dup --
-    pop rax
-    push rax
-    push rax
-addr_557:
-    ;; -- argc --
-    mov rax, [args_ptr]
-    mov rax, [rax]
-    push rax
-addr_558:
-    ;; -- push int 3 --
-    mov rax, 3
-    push rax
-addr_559:
-    ;; -- minus --
-    pop rax
-    pop rbx
-    sub rbx, rax
-    push rbx
-addr_560:
-    ;; -- gt --
-    mov rcx, 0
-    mov rdx, 1
-    pop rbx
-    pop rax
-    cmp rax, rbx
-    cmovg rcx, rdx
-    push rcx
-addr_561:
-    ;; -- do --
-    pop rax
-    test rax, rax
-    jz addr_569
-addr_562:
-    ;; -- push str --
-    mov rax, 53
-    push rax
-    push str_9
-addr_563:
-    ;; -- call --
-    mov rax, rsp
-    mov rsp, [ret_stack_rsp]
-    call addr_470
-    mov [ret_stack_rsp], rsp
-    mov rsp, rax
-addr_564:
-    ;; -- push int 1 --
-    mov rax, 1
-    push rax
-addr_565:
-    ;; -- push int 60 --
-    mov rax, 60
-    push rax
-addr_566:
-    ;; -- syscall1 --
-    pop rax
-    pop rdi
-    syscall
-    push rax
-addr_567:
-    ;; -- drop --
-    pop rax
-addr_568:
-    ;; -- end --
-addr_569:
-    ;; -- push int 1 --
-    mov rax, 1
-    push rax
-addr_570:
-    ;; -- plus --
-    pop rax
-    pop rbx
-    add rax, rbx
-    push rax
-addr_571:
-    ;; -- dup --
-    pop rax
-    push rax
-    push rax
-addr_572:
-    ;; -- push int 8 --
-    mov rax, 8
-    push rax
-addr_573:
-    ;; -- mul --
-    pop rax
-    pop rbx
-    mul rbx
-    push rax
-addr_574:
-    ;; -- argv --
-    mov rax, [args_ptr]
-    add rax, 8
-    push rax
-addr_575:
-    ;; -- plus --
-    pop rax
-    pop rbx
-    add rax, rbx
-    push rax
-addr_576:
-    ;; -- load64 --
-    pop rax
-    xor rbx, rbx
-    mov rbx, [rax]
-    push rbx
-addr_577:
-    ;; -- cast(ptr) --
-addr_578:
-    ;; -- dup --
-    pop rax
-    push rax
-    push rax
-addr_579:
+addr_500:
     ;; -- call --
     mov rax, rsp
     mov rsp, [ret_stack_rsp]
     call addr_1
     mov [ret_stack_rsp], rsp
     mov rsp, rax
-addr_580:
+addr_501:
     ;; -- swap --
     pop rax
     pop rbx
     push rax
     push rbx
-addr_581:
-    ;; -- push mem --
-    mov rax, mem
-    add rax, 33
-    push rax
-addr_582:
+addr_502:
     ;; -- call --
     mov rax, rsp
     mov rsp, [ret_stack_rsp]
-    call addr_438
+    call addr_312
     mov [ret_stack_rsp], rsp
     mov rsp, rax
-addr_583:
-    ;; -- else --
-    jmp addr_590
-addr_584:
+addr_503:
     ;; -- push str --
-    mov rax, 53
+    mov rax, 23
     push rax
-    push str_10
-addr_585:
+    push str_2
+addr_504:
     ;; -- call --
     mov rax, rsp
     mov rsp, [ret_stack_rsp]
-    call addr_470
+    call addr_312
     mov [ret_stack_rsp], rsp
     mov rsp, rax
-addr_586:
+addr_505:
+    ;; -- push str --
+    mov rax, 10
+    push rax
+    push str_3
+addr_506:
+    ;; -- call --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    call addr_312
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+addr_507:
+    ;; -- push str --
+    mov rax, 40
+    push rax
+    push str_4
+addr_508:
+    ;; -- call --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    call addr_312
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+addr_509:
+    ;; -- push str --
+    mov rax, 37
+    push rax
+    push str_5
+addr_510:
+    ;; -- call --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    call addr_312
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+addr_511:
+    ;; -- return --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    ret
+addr_512:
+    ;; -- func --
+    jmp addr_746
+addr_513:
+    ;; -- stack prep --
+    sub rsp, 638
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+addr_514:
+    ;; -- push bool 0 --
+    mov rax, 0
+    push rax
+addr_515:
+    ;; -- cast(int) --
+addr_516:
+    mov rax, [ret_stack_rsp]
+    add rax, 0
+    push rax
+addr_517:
+    ;; -- store --
+    pop rax
+    pop rbx
+    mov [rax], bl
+addr_518:
+    ;; -- push int 256 --
+    mov rax, 256
+    push rax
+addr_519:
+    ;; -- push int 0 --
+    mov rax, 0
+    push rax
+addr_520:
+    mov rax, [ret_stack_rsp]
+    add rax, 1
+    push rax
+addr_521:
+    ;; -- call --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    call addr_411
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+addr_522:
+    ;; -- push int 256 --
+    mov rax, 256
+    push rax
+addr_523:
+    ;; -- push int 0 --
+    mov rax, 0
+    push rax
+addr_524:
+    mov rax, [ret_stack_rsp]
+    add rax, 258
+    push rax
+addr_525:
+    ;; -- call --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    call addr_411
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+addr_526:
+    ;; -- push bool 0 --
+    mov rax, 0
+    push rax
+addr_527:
+    ;; -- cast(int) --
+addr_528:
+    mov rax, [ret_stack_rsp]
+    add rax, 257
+    push rax
+addr_529:
+    ;; -- store --
+    pop rax
+    pop rbx
+    mov [rax], bl
+addr_530:
+    mov rax, [ret_stack_rsp]
+    add rax, 514
+    push rax
+addr_531:
+    ;; -- push int 0 --
+    mov rax, 0
+    push rax
+addr_532:
+    ;; -- store64 --
+    pop rax
+    pop rbx
+    mov [rax], rbx
+addr_533:
+    ;; -- if --
+addr_534:
+    ;; -- argc --
+    mov rax, [args_ptr]
+    mov rax, [rax]
+    push rax
+addr_535:
+    ;; -- push int 2 --
+    mov rax, 2
+    push rax
+addr_536:
+    ;; -- gt --
+    mov rcx, 0
+    mov rdx, 1
+    pop rbx
+    pop rax
+    cmp rax, rbx
+    cmovl rcx, rdx
+    push rcx
+addr_537:
+    ;; -- do --
+    pop rax
+    test rax, rax
+    jz addr_546
+addr_538:
+    ;; -- push str --
+    mov rax, 32
+    push rax
+    push str_6
+addr_539:
+    ;; -- call --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    call addr_489
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+addr_540:
+    ;; -- call --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    call addr_312
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+addr_541:
     ;; -- push int 1 --
     mov rax, 1
     push rax
-addr_587:
+addr_542:
     ;; -- push int 60 --
     mov rax, 60
     push rax
-addr_588:
+addr_543:
     ;; -- syscall1 --
     pop rax
     pop rdi
     syscall
     push rax
-addr_589:
+addr_544:
     ;; -- drop --
     pop rax
-addr_590:
+addr_545:
     ;; -- end --
-addr_591:
+addr_546:
+    ;; -- if --
+addr_547:
+    ;; -- argc --
+    mov rax, [args_ptr]
+    mov rax, [rax]
+    push rax
+addr_548:
+    ;; -- push int 2 --
+    mov rax, 2
+    push rax
+addr_549:
+    ;; -- gt --
+    mov rcx, 0
+    mov rdx, 1
+    pop rbx
+    pop rax
+    cmp rax, rbx
+    cmovg rcx, rdx
+    push rcx
+addr_550:
+    ;; -- do --
+    pop rax
+    test rax, rax
+    jz addr_645
+addr_551:
     ;; -- push int 1 --
     mov rax, 1
     push rax
-addr_592:
+addr_552:
+    ;; -- while --
+addr_553:
+    ;; -- dup --
+    pop rax
+    push rax
+    push rax
+addr_554:
+    ;; -- argc --
+    mov rax, [args_ptr]
+    mov rax, [rax]
+    push rax
+addr_555:
+    ;; -- push int 1 --
+    mov rax, 1
+    push rax
+addr_556:
+    ;; -- minus --
+    pop rax
+    pop rbx
+    sub rbx, rax
+    push rbx
+addr_557:
+    ;; -- gt --
+    mov rcx, 0
+    mov rdx, 1
+    pop rbx
+    pop rax
+    cmp rax, rbx
+    cmovl rcx, rdx
+    push rcx
+addr_558:
+    ;; -- do --
+    pop rax
+    test rax, rax
+    jz addr_643
+addr_559:
+    ;; -- if --
+addr_560:
+    ;; -- dup --
+    pop rax
+    push rax
+    push rax
+addr_561:
+    ;; -- push int 8 --
+    mov rax, 8
+    push rax
+addr_562:
+    ;; -- mul --
+    pop rax
+    pop rbx
+    mul rbx
+    push rax
+addr_563:
+    ;; -- argv --
+    mov rax, [args_ptr]
+    add rax, 8
+    push rax
+addr_564:
     ;; -- plus --
     pop rax
     pop rbx
     add rax, rbx
     push rax
-addr_593:
-    ;; -- end --
-    jmp addr_522
-addr_594:
-    ;; -- drop --
+addr_565:
+    ;; -- load64 --
     pop rax
-addr_595:
-    ;; -- end --
-addr_596:
+    xor rbx, rbx
+    mov rbx, [rax]
+    push rbx
+addr_566:
+    ;; -- cast(ptr) --
+addr_567:
     ;; -- push str --
-    mov rax, 4
-    push rax
-    push str_11
-addr_597:
+    push str_7
+addr_568:
     ;; -- call --
     mov rax, rsp
     mov rsp, [ret_stack_rsp]
-    call addr_305
+    call addr_25
     mov [ret_stack_rsp], rsp
     mov rsp, rax
+addr_569:
+    ;; -- do --
+    pop rax
+    test rax, rax
+    jz addr_575
+addr_570:
+    ;; -- push bool 1 --
+    mov rax, 1
+    push rax
+addr_571:
+    ;; -- cast(int) --
+addr_572:
+    mov rax, [ret_stack_rsp]
+    add rax, 0
+    push rax
+addr_573:
+    ;; -- store --
+    pop rax
+    pop rbx
+    mov [rax], bl
+addr_574:
+    ;; -- elif --
+    jmp addr_631
+addr_575:
+    ;; -- dup --
+    pop rax
+    push rax
+    push rax
+addr_576:
+    ;; -- push int 8 --
+    mov rax, 8
+    push rax
+addr_577:
+    ;; -- mul --
+    pop rax
+    pop rbx
+    mul rbx
+    push rax
+addr_578:
+    ;; -- argv --
+    mov rax, [args_ptr]
+    add rax, 8
+    push rax
+addr_579:
+    ;; -- plus --
+    pop rax
+    pop rbx
+    add rax, rbx
+    push rax
+addr_580:
+    ;; -- load64 --
+    pop rax
+    xor rbx, rbx
+    mov rbx, [rax]
+    push rbx
+addr_581:
+    ;; -- cast(ptr) --
+addr_582:
+    ;; -- push str --
+    push str_8
+addr_583:
+    ;; -- call --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    call addr_25
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+addr_584:
+    ;; -- do --
+    pop rax
+    test rax, rax
+    jz addr_632
+addr_585:
+    ;; -- if --
+addr_586:
+    mov rax, [ret_stack_rsp]
+    add rax, 257
+    push rax
+addr_587:
+    ;; -- load --
+    pop rax
+    xor rbx, rbx
+    mov bl, [rax]
+    push rbx
+addr_588:
+    ;; -- cast(bool) --
+addr_589:
+    ;; -- do --
+    pop rax
+    test rax, rax
+    jz addr_598
+addr_590:
+    ;; -- push str --
+    mov rax, 50
+    push rax
+    push str_9
+addr_591:
+    ;; -- call --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    call addr_489
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+addr_592:
+    ;; -- call --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    call addr_312
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+addr_593:
+    ;; -- push int 1 --
+    mov rax, 1
+    push rax
+addr_594:
+    ;; -- push int 60 --
+    mov rax, 60
+    push rax
+addr_595:
+    ;; -- syscall1 --
+    pop rax
+    pop rdi
+    syscall
+    push rax
+addr_596:
+    ;; -- drop --
+    pop rax
+addr_597:
+    ;; -- end --
 addr_598:
+    ;; -- if --
+addr_599:
+    ;; -- dup --
+    pop rax
+    push rax
+    push rax
+addr_600:
+    ;; -- argc --
+    mov rax, [args_ptr]
+    mov rax, [rax]
+    push rax
+addr_601:
+    ;; -- push int 3 --
+    mov rax, 3
+    push rax
+addr_602:
+    ;; -- minus --
+    pop rax
+    pop rbx
+    sub rbx, rax
+    push rbx
+addr_603:
+    ;; -- gt --
+    mov rcx, 0
+    mov rdx, 1
+    pop rbx
+    pop rax
+    cmp rax, rbx
+    cmovg rcx, rdx
+    push rcx
+addr_604:
+    ;; -- do --
+    pop rax
+    test rax, rax
+    jz addr_613
+addr_605:
+    ;; -- push str --
+    mov rax, 53
+    push rax
+    push str_10
+addr_606:
+    ;; -- call --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    call addr_489
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+addr_607:
+    ;; -- call --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    call addr_312
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+addr_608:
+    ;; -- push int 1 --
+    mov rax, 1
+    push rax
+addr_609:
+    ;; -- push int 60 --
+    mov rax, 60
+    push rax
+addr_610:
+    ;; -- syscall1 --
+    pop rax
+    pop rdi
+    syscall
+    push rax
+addr_611:
+    ;; -- drop --
+    pop rax
+addr_612:
+    ;; -- end --
+addr_613:
+    ;; -- push int 1 --
+    mov rax, 1
+    push rax
+addr_614:
+    ;; -- plus --
+    pop rax
+    pop rbx
+    add rax, rbx
+    push rax
+addr_615:
+    ;; -- dup --
+    pop rax
+    push rax
+    push rax
+addr_616:
+    ;; -- push int 8 --
+    mov rax, 8
+    push rax
+addr_617:
+    ;; -- mul --
+    pop rax
+    pop rbx
+    mul rbx
+    push rax
+addr_618:
+    ;; -- argv --
+    mov rax, [args_ptr]
+    add rax, 8
+    push rax
+addr_619:
+    ;; -- plus --
+    pop rax
+    pop rbx
+    add rax, rbx
+    push rax
+addr_620:
+    ;; -- load64 --
+    pop rax
+    xor rbx, rbx
+    mov rbx, [rax]
+    push rbx
+addr_621:
+    ;; -- cast(ptr) --
+addr_622:
+    ;; -- dup --
+    pop rax
+    push rax
+    push rax
+addr_623:
+    ;; -- call --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    call addr_1
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+addr_624:
+    ;; -- swap --
+    pop rax
+    pop rbx
+    push rax
+    push rbx
+addr_625:
+    mov rax, [ret_stack_rsp]
+    add rax, 1
+    push rax
+addr_626:
+    ;; -- call --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    call addr_436
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+addr_627:
+    ;; -- push bool 1 --
+    mov rax, 1
+    push rax
+addr_628:
+    ;; -- cast(int) --
+addr_629:
+    mov rax, [ret_stack_rsp]
+    add rax, 257
+    push rax
+addr_630:
+    ;; -- store --
+    pop rax
+    pop rbx
+    mov [rax], bl
+addr_631:
+    ;; -- else --
+    jmp addr_639
+addr_632:
+    ;; -- push str --
+    mov rax, 53
+    push rax
+    push str_11
+addr_633:
+    ;; -- call --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    call addr_489
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+addr_634:
+    ;; -- call --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    call addr_312
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+addr_635:
+    ;; -- push int 1 --
+    mov rax, 1
+    push rax
+addr_636:
+    ;; -- push int 60 --
+    mov rax, 60
+    push rax
+addr_637:
+    ;; -- syscall1 --
+    pop rax
+    pop rdi
+    syscall
+    push rax
+addr_638:
+    ;; -- drop --
+    pop rax
+addr_639:
+    ;; -- end --
+addr_640:
+    ;; -- push int 1 --
+    mov rax, 1
+    push rax
+addr_641:
+    ;; -- plus --
+    pop rax
+    pop rbx
+    add rax, rbx
+    push rax
+addr_642:
+    ;; -- end --
+    jmp addr_552
+addr_643:
+    ;; -- drop --
+    pop rax
+addr_644:
+    ;; -- end --
+addr_645:
+    ;; -- push int 4 --
+    mov rax, 4
+    push rax
+addr_646:
+    ;; -- print --
+    pop rdi
+    call print
+addr_647:
+    ;; -- argc --
+    mov rax, [args_ptr]
+    mov rax, [rax]
+    push rax
+addr_648:
+    ;; -- push int 1 --
+    mov rax, 1
+    push rax
+addr_649:
+    ;; -- minus --
+    pop rax
+    pop rbx
+    sub rbx, rax
+    push rbx
+addr_650:
+    ;; -- push int 8 --
+    mov rax, 8
+    push rax
+addr_651:
+    ;; -- mul --
+    pop rax
+    pop rbx
+    mul rbx
+    push rax
+addr_652:
+    ;; -- argv --
+    mov rax, [args_ptr]
+    add rax, 8
+    push rax
+addr_653:
+    ;; -- plus --
+    pop rax
+    pop rbx
+    add rax, rbx
+    push rax
+addr_654:
+    ;; -- load64 --
+    pop rax
+    xor rbx, rbx
+    mov rbx, [rax]
+    push rbx
+addr_655:
+    ;; -- cast(ptr) --
+addr_656:
+    ;; -- dup --
+    pop rax
+    push rax
+    push rax
+addr_657:
+    ;; -- call --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    call addr_1
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+addr_658:
+    ;; -- swap --
+    pop rax
+    pop rbx
+    push rax
+    push rbx
+addr_659:
+    mov rax, [ret_stack_rsp]
+    add rax, 258
+    push rax
+addr_660:
+    ;; -- call --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    call addr_436
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+addr_661:
+    ;; -- push int 0 --
+    mov rax, 0
+    push rax
+addr_662:
+    mov rax, [ret_stack_rsp]
+    add rax, 258
+    push rax
+addr_663:
+    ;; -- push int 2 --
+    mov rax, 2
+    push rax
+addr_664:
+    ;; -- syscall2 --
+    pop rax
+    pop rdi
+    pop rsi
+    syscall
+    push rax
+addr_665:
+    ;; -- if --
+addr_666:
+    ;; -- dup --
+    pop rax
+    push rax
+    push rax
+addr_667:
+    ;; -- push int 0 --
+    mov rax, 0
+    push rax
+addr_668:
+    ;; -- gt --
+    mov rcx, 0
+    mov rdx, 1
+    pop rbx
+    pop rax
+    cmp rax, rbx
+    cmovl rcx, rdx
+    push rcx
+addr_669:
+    ;; -- do --
+    pop rax
+    test rax, rax
+    jz addr_682
+addr_670:
+    ;; -- push str --
+    mov rax, 31
+    push rax
+    push str_12
+addr_671:
+    ;; -- call --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    call addr_312
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+addr_672:
     ;; -- push int 256 --
     mov rax, 256
     push rax
-addr_599:
-    ;; -- push mem --
-    mov rax, mem
-    add rax, 33
+addr_673:
+    mov rax, [ret_stack_rsp]
+    add rax, 258
     push rax
-addr_600:
+addr_674:
     ;; -- call --
     mov rax, rsp
     mov rsp, [ret_stack_rsp]
-    call addr_305
+    call addr_312
     mov [ret_stack_rsp], rsp
     mov rsp, rax
-addr_601:
+addr_675:
     ;; -- push str --
+    mov rax, 1
+    push rax
+    push str_13
+addr_676:
+    ;; -- call --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    call addr_312
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+addr_677:
+    ;; -- push int 1 --
+    mov rax, 1
+    push rax
+addr_678:
+    ;; -- push int 60 --
+    mov rax, 60
+    push rax
+addr_679:
+    ;; -- syscall1 --
+    pop rax
+    pop rdi
+    syscall
+    push rax
+addr_680:
+    ;; -- drop --
+    pop rax
+addr_681:
+    ;; -- end --
+addr_682:
+    ;; -- dup --
+    pop rax
+    push rax
+    push rax
+addr_683:
+    mov rax, [ret_stack_rsp]
+    add rax, 522
+    push rax
+addr_684:
+    ;; -- swap --
+    pop rax
+    pop rbx
+    push rax
+    push rbx
+addr_685:
+    ;; -- push int 5 --
     mov rax, 5
     push rax
-    push str_12
-addr_602:
+addr_686:
+    ;; -- syscall2 --
+    pop rax
+    pop rdi
+    pop rsi
+    syscall
+    push rax
+addr_687:
+    ;; -- if --
+addr_688:
+    ;; -- dup --
+    pop rax
+    push rax
+    push rax
+addr_689:
+    ;; -- push int 0 --
+    mov rax, 0
+    push rax
+addr_690:
+    ;; -- gt --
+    mov rcx, 0
+    mov rdx, 1
+    pop rbx
+    pop rax
+    cmp rax, rbx
+    cmovl rcx, rdx
+    push rcx
+addr_691:
+    ;; -- do --
+    pop rax
+    test rax, rax
+    jz addr_704
+addr_692:
+    ;; -- push str --
+    mov rax, 31
+    push rax
+    push str_14
+addr_693:
     ;; -- call --
     mov rax, rsp
     mov rsp, [ret_stack_rsp]
-    call addr_305
+    call addr_312
     mov [ret_stack_rsp], rsp
     mov rsp, rax
-addr_603:
+addr_694:
+    ;; -- push int 256 --
+    mov rax, 256
+    push rax
+addr_695:
+    mov rax, [ret_stack_rsp]
+    add rax, 258
+    push rax
+addr_696:
+    ;; -- call --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    call addr_312
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+addr_697:
+    ;; -- push str --
+    mov rax, 1
+    push rax
+    push str_15
+addr_698:
+    ;; -- call --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    call addr_312
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+addr_699:
+    ;; -- push int 1 --
+    mov rax, 1
+    push rax
+addr_700:
+    ;; -- push int 60 --
+    mov rax, 60
+    push rax
+addr_701:
+    ;; -- syscall1 --
+    pop rax
+    pop rdi
+    syscall
+    push rax
+addr_702:
+    ;; -- drop --
+    pop rax
+addr_703:
+    ;; -- end --
+addr_704:
+    mov rax, [ret_stack_rsp]
+    add rax, 514
+    push rax
+addr_705:
+    ;; -- load64 --
+    pop rax
+    xor rbx, rbx
+    mov rbx, [rax]
+    push rbx
+addr_706:
+    ;; -- print --
+    pop rdi
+    call print
+addr_707:
+    ;; -- dup --
+    pop rax
+    push rax
+    push rax
+addr_708:
+    mov rax, [ret_stack_rsp]
+    add rax, 522
+    push rax
+addr_709:
+    ;; -- call --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    call addr_468
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+addr_710:
+    mov rax, [ret_stack_rsp]
+    add rax, 514
+    push rax
+addr_711:
+    ;; -- store64 --
+    pop rax
+    pop rbx
+    mov [rax], rbx
+addr_712:
+    ;; -- push int 3 --
+    mov rax, 3
+    push rax
+addr_713:
+    ;; -- syscall1 --
+    pop rax
+    pop rdi
+    syscall
+    push rax
+addr_714:
+    ;; -- if --
+addr_715:
+    ;; -- push ptr 0 --
+    mov rax, 0
+    push rax
+addr_716:
+    mov rax, [ret_stack_rsp]
+    add rax, 514
+    push rax
+addr_717:
+    ;; -- load64 --
+    pop rax
+    xor rbx, rbx
+    mov rbx, [rax]
+    push rbx
+addr_718:
+    ;; -- cast(ptr) --
+addr_719:
+    ;; -- equal --
+    mov rcx, 0
+    mov rdx, 1
+    pop rax
+    pop rbx
+    cmp rax, rbx
+    cmove rcx, rdx
+    push rcx
+addr_720:
+    ;; -- do --
+    pop rax
+    test rax, rax
+    jz addr_733
+addr_721:
+    ;; -- push str --
+    mov rax, 30
+    push rax
+    push str_16
+addr_722:
+    ;; -- call --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    call addr_312
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+addr_723:
+    ;; -- push int 256 --
+    mov rax, 256
+    push rax
+addr_724:
+    mov rax, [ret_stack_rsp]
+    add rax, 258
+    push rax
+addr_725:
+    ;; -- call --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    call addr_312
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+addr_726:
+    ;; -- push str --
+    mov rax, 12
+    push rax
+    push str_17
+addr_727:
+    ;; -- call --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    call addr_312
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+addr_728:
+    ;; -- push int 1 --
+    mov rax, 1
+    push rax
+addr_729:
+    ;; -- push int 60 --
+    mov rax, 60
+    push rax
+addr_730:
+    ;; -- syscall1 --
+    pop rax
+    pop rdi
+    syscall
+    push rax
+addr_731:
+    ;; -- drop --
+    pop rax
+addr_732:
+    ;; -- end --
+addr_733:
+    mov rax, [ret_stack_rsp]
+    add rax, 522
+    push rax
+addr_734:
+    ;; -- push int 44 --
+    mov rax, 44
+    push rax
+addr_735:
+    ;; -- plus --
+    pop rax
+    pop rbx
+    add rax, rbx
+    push rax
+addr_736:
+    ;; -- load64 --
+    pop rax
+    xor rbx, rbx
+    mov rbx, [rax]
+    push rbx
+addr_737:
+    mov rax, [ret_stack_rsp]
+    add rax, 514
+    push rax
+addr_738:
+    ;; -- load64 --
+    pop rax
+    xor rbx, rbx
+    mov rbx, [rax]
+    push rbx
+addr_739:
+    ;; -- push int 11 --
+    mov rax, 11
+    push rax
+addr_740:
+    ;; -- syscall2 --
+    pop rax
+    pop rdi
+    pop rsi
+    syscall
+    push rax
+addr_741:
+    ;; -- push int 0 --
+    mov rax, 0
+    push rax
+addr_742:
+    ;; -- push int 60 --
+    mov rax, 60
+    push rax
+addr_743:
+    ;; -- syscall1 --
+    pop rax
+    pop rdi
+    syscall
+    push rax
+addr_744:
+    ;; -- drop --
+    pop rax
+addr_745:
     ;; -- return --
     mov rax, rsp
     mov rsp, [ret_stack_rsp]
+    add rsp, 638
     ret
-addr_604:
+addr_746:
     ;; -- call --
     mov rax, rsp
     mov rsp, [ret_stack_rsp]
-    call addr_495
+    call addr_513
     mov [ret_stack_rsp], rsp
     mov rsp, rax
-addr_605:
+addr_747:
     mov rax, 60
     mov rdi, 0
     syscall
@@ -3116,13 +3781,18 @@ str_5: db 0x9,0x2d,0x6f,0x20,0x3c,0x6e,0x61,0x6d,0x65,0x3e,0x20,0x3a,0x20,0x73,0
 str_6: db 0x5b,0x45,0x52,0x52,0x4f,0x52,0x5d,0x20,0x3d,0x3e,0x20,0x4e,0x6f,0x74,0x20,0x65,0x6e,0x6f,0x75,0x67,0x68,0x20,0x61,0x72,0x67,0x75,0x6d,0x65,0x6e,0x74,0x73,0xa
 str_7: db 0x2d,0x72,0x0
 str_8: db 0x2d,0x6f,0x0
-str_9: db 0x5b,0x45,0x52,0x52,0x4f,0x52,0x5d,0x20,0x3d,0x3e,0x20,0x50,0x6c,0x65,0x61,0x73,0x65,0x20,0x70,0x72,0x6f,0x76,0x69,0x64,0x65,0x20,0x6f,0x75,0x74,0x70,0x75,0x74,0x20,0x6e,0x61,0x6d,0x65,0x20,0x66,0x6f,0x72,0x20,0x2d,0x6f,0x20,0x6f,0x70,0x74,0x69,0x6f,0x6e,0x73,0xa
+str_9: db 0x5b,0x45,0x52,0x52,0x4f,0x52,0x5d,0x20,0x3d,0x3e,0x20,0x59,0x6f,0x75,0x20,0x63,0x61,0x6e,0x27,0x74,0x20,0x72,0x65,0x6e,0x61,0x6d,0x65,0x20,0x6d,0x75,0x6c,0x74,0x69,0x70,0x6c,0x65,0x20,0x74,0x69,0x6d,0x65,0x73,0x20,0x6f,0x75,0x74,0x70,0x75,0x74,0xa
 str_10: db 0x5b,0x45,0x52,0x52,0x4f,0x52,0x5d,0x20,0x3d,0x3e,0x20,0x50,0x6c,0x65,0x61,0x73,0x65,0x20,0x70,0x72,0x6f,0x76,0x69,0x64,0x65,0x20,0x6f,0x75,0x74,0x70,0x75,0x74,0x20,0x6e,0x61,0x6d,0x65,0x20,0x66,0x6f,0x72,0x20,0x2d,0x6f,0x20,0x6f,0x70,0x74,0x69,0x6f,0x6e,0x73,0xa
-str_11: db 0x2d,0x2d,0x2d,0xa
-str_12: db 0xa,0x2d,0x2d,0x2d,0xa
+str_11: db 0x5b,0x45,0x52,0x52,0x4f,0x52,0x5d,0x20,0x3d,0x3e,0x20,0x50,0x6c,0x65,0x61,0x73,0x65,0x20,0x70,0x72,0x6f,0x76,0x69,0x64,0x65,0x20,0x6f,0x75,0x74,0x70,0x75,0x74,0x20,0x6e,0x61,0x6d,0x65,0x20,0x66,0x6f,0x72,0x20,0x2d,0x6f,0x20,0x6f,0x70,0x74,0x69,0x6f,0x6e,0x73,0xa
+str_12: db 0x5b,0x45,0x52,0x52,0x4f,0x52,0x5d,0x20,0x3d,0x3e,0x20,0x55,0x6e,0x61,0x62,0x6c,0x65,0x20,0x74,0x6f,0x20,0x6f,0x70,0x65,0x6e,0x20,0x66,0x69,0x6c,0x65,0x20
+str_13: db 0xa
+str_14: db 0x5b,0x45,0x52,0x52,0x4f,0x52,0x5d,0x20,0x3d,0x3e,0x20,0x55,0x6e,0x61,0x62,0x6c,0x65,0x20,0x74,0x6f,0x20,0x73,0x74,0x61,0x74,0x20,0x66,0x69,0x6c,0x65,0x20
+str_15: db 0xa
+str_16: db 0x5b,0x45,0x52,0x52,0x4f,0x52,0x5d,0x20,0x3d,0x3e,0x20,0x55,0x6e,0x61,0x62,0x6c,0x65,0x20,0x74,0x6f,0x20,0x6d,0x61,0x70,0x20,0x66,0x69,0x6c,0x65,0x20
+str_17: db 0x20,0x74,0x6f,0x20,0x6d,0x65,0x6d,0x6f,0x72,0x79,0x20,0xa
 segment .bss
 args_ptr: resq 1
 ret_stack_rsp: resq 1
 ret_stack: resq 4096
 ret_stack_end:
-mem: resb 289
+mem: resb 32

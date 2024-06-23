@@ -152,9 +152,8 @@ const Token.expanded_count sizeof(u64)                                      offs
 const sizeof(Token)                                                         reset  end
 
 fn memset
-        <-->
-        alloc n sizeof(char) end n .8
         alloc dst sizeof(ptr) end dst .64
+        alloc n sizeof(char) end n .8
         during dup 0 != go
                 1 -
                 dup dst ,64 @ptr +
@@ -174,18 +173,23 @@ fn memcpy
         end _
 end
 
+fn slurp
+        alloc buf sizeof(ptr) end buf .64
+        alloc fd 4 end fd .32
+        0 fd ,32 MAP_PRIVATE PROT_READ buf ,64 stat.size + ,64 null mmap
+end
+
 fn usage
         "USAGE : " eputs
-        0 #nv dup cstrlen <> eputs
+        0 #nv cstr-to-str eputs
         " [OPTIONS] <file.thrt>\n" eputs
         "OPTIONS :\n" eputs
         "\t-r : run the program after compilation\n" eputs
         "\t-o <name> : set the executable name\n" eputs
-        eputs
 end
 
 define usage_ext
-        usage
+        usage eputs
         EXIT_FAILURE exit
 end
 
@@ -193,10 +197,15 @@ fn main
         alloc run sizeof(bool) end
         alloc outname sizeof(char) 256 * end
         alloc customOut sizeof(bool) end
+        alloc src sizeof(char) 256 * end
+        alloc file sizeof(ptr) end
+        alloc buf sizeof(stat) end
 
         false @int run .8
-        outname 0 256 memset
+        256 0 outname memset
+        256 0 src memset
         false @int customOut .8
+        file 0 .64
         if #c 2 < go
                 "[ERROR] => Not enough arguments\n" usage_ext
         end
@@ -206,7 +215,7 @@ fn main
                         if dup #nv "-r"C cstreq go
                                 true @int run .8
                         elif dup #nv "-o"C cstreq go
-                                if customOut .8 @bool ! go
+                                if customOut ,8 @bool go
                                         "[ERROR] => You can't rename multiple times output\n" usage_ext
                                 end
                                 if dup #c 3 - > go
@@ -221,7 +230,34 @@ fn main
                         1 +
                 end _
         end
-        #c 1 - #nv dup cstrlen __
+        4 dump
+        #c 1 - #nv cstr-to-str src memcpy
+        O_RDONLY src open
+        if dup 0 < go
+                "[ERROR] => Unable to open file " eputs
+                256 src eputs
+                "\n" eputs
+                EXIT_FAILURE exit
+        end
+        dup buf <> fstat
+        if dup 0 < go
+                "[ERROR] => Unable to stat file " eputs
+                256 src eputs
+                "\n" eputs
+                EXIT_FAILURE exit
+        end
+        file ,64 dump
+        dup buf slurp file .64
+        close
+        if null file ,64 @ptr = go
+                "[ERROR] => Unable to map file " eputs
+                256 src eputs
+                " to memory \n" eputs
+                EXIT_FAILURE exit
+        end
+        buf stat.size + ,64 file ,64 munmap
+        EXIT_SUCCESS exit
 end
 
 main
+
