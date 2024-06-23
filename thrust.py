@@ -632,7 +632,7 @@ def type_check_program(program: Program):
                 if b_type == DataType.INT and a_type == DataType.PTR:
                     pass
                 else:
-                    compiler_error_with_expansion_stack(op.token, "invalid argument type for STORE intrinsic got %s and %s" % (a_type, b_type))
+                    compiler_error_with_expansion_stack(op.token, "invalid argument type for STORE intrinsic got %s and %s" % (str(a_type), str(b_type)))   
                     exit(1)
             elif op.operand == Intrinsic.STORE16:
                 assert len(DataType) == 3, "Exhaustive type handling in STORE16 intrinsic"

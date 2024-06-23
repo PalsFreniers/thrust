@@ -9,5 +9,8 @@ const sizeof(i32) 4 end
 const sizeof(i64) 8 end
 
 const sizeof(ptr) 8 end
+const sizeof(int) 8 end
+const sizeof(bool) 1 end
+const sizeof(char) 1 end
 
 const sizeof(size_t) sizeof(u64) end

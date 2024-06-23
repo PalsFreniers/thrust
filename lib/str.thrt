@@ -1,8 +1,9 @@
 fn cstrlen
-        0 <> during dup ,8 0 != go
-                1 + <>
-                1 + <>
-        end _
+        alloc s sizeof(ptr) end s .64
+        0 during s ,64 @ptr ,8 0 != go
+                s ++64
+                1 +
+        end
 end
 
 define cstr-to-str

@@ -5,17 +5,4 @@ const MAP_PRIVATE 2 end
 const PROT_READ 1 end
 
 // "funcs"
-alloc memcpy[size] 8 end
-alloc memcpy[src]  8 end
-alloc memcpy[dst]  8 end
-fn memcpy
-        memcpy[dst]  .64
-        memcpy[src]  .64
-        memcpy[size] .64
-        0 during dup memcpy[size] ,64 < go
-                dup memcpy[src] ,64 @ptr + ,8
-                <+> memcpy[dst] ,64 @ptr + .8
-                ++
-        end _
-end
 
