@@ -39,6 +39,8 @@ class Keyword(Enum):
     TRUE=auto()
     FALSE=auto()
     NULL=auto()
+    AS=auto()
+    RETURN=auto()
 
 class DataType(IntEnum):
     INT=auto()
@@ -189,16 +191,40 @@ DataStack=List[Tuple[DataType, Token]]
 @dataclass
 class Context:
     stack: DataStack
-    ret_stack: List[OpAddr]
     ip: OpAddr
+    outs: List[DataType]
+
+@dataclass
+class Contract:
+    ins: List[DataType]
+    outs: List[DataType]
+
+def type_check_contract(location: Token, ctx: Context, contract: Contract):
+    ins = copy(contract.ins)
+    while len(ctx.stack) > 0 and len(ins) > 0:
+        actual, loc = ctx.stack.pop()
+        expected = ins.pop()
+        if actual != expected:
+            compiler_error_with_expansion_stack(loc, f"Expected type {repr(expected)} but got {repr(actual)}")
+            exit(1)
+    if len(ctx.stack) < len(ins):
+        compiler_error_with_expansion_stack(location, f"Not enought arguments provided. Expected:")
+        for typ in ins:
+            compiler_note(location.loc, f" {repr(typ)}")
+        exit(1)
+    ctx.stack += [(typ, location) for typ in contract.outs]
 
 # TODO: better error reporting on type checking errors of intrinsics
 # Reported expected and actual types with the location that introduced the actual type
-def type_check_program(program: Program):
+def type_check_program(program: Program, contracts: Dict[OpAddr, Contract]):
     visited_dos: Dict[OpAddr, DataStack] = {}
-    contexts: List[Context] = [Context(stack=[], ip=0, ret_stack=[])]
+    contexts: List[Context] = [Context(stack=[], ip=0, outs=[])]
+    if len(program.ops) == 0:
+        exit(0);
+    for faddr, fcontract in reversed(contracts.items()):
+        contexts.append(Context(stack=[(typ, program.ops[faddr].token) for typ in fcontract.ins], ip=faddr, outs=fcontract.outs))
     while len(contexts) > 0:
-        ctx = contexts[-1];
+        ctx = contexts[-1]
         # TODO: type checking fails on empty programs
         op = program.ops[ctx.ip]
         assert len(OpType) == 18, "Exhaustive ops handling in type_check_program()"
@@ -230,11 +256,18 @@ def type_check_program(program: Program):
         elif op.typ == OpType.STACK_FRAME:
             ctx.ip += 1
         elif op.typ == OpType.RETURN:
-            ctx.ip = ctx.ret_stack.pop()
+            if [typ for typ, _ in ctx.stack] != ctx.outs:
+                compiler_error_with_expansion_stack(op.token, "Unexpected data on function stack")
+                compiler_note(op.token.loc, f"Expected: {ctx.outs}")
+                compiler_note(op.token.loc, f"Actual: ")
+                for typ, tok in ctx.stack:
+                    compiler_note(tok.loc, f"{repr(typ)}")
+                exit(1)
+            contexts.pop()
         elif op.typ == OpType.CALL:
-            ctx.ret_stack.append(ctx.ip + 1)
             assert isinstance(op.operand, OpAddr)
-            ctx.ip = op.operand
+            type_check_contract(op.token, ctx, contracts[op.operand])
+            ctx.ip += 1
         elif op.typ == OpType.INTRINSIC:
             assert len(Intrinsic) == 48, "Exhaustive intrinsic handling in type_check_program()"
             assert isinstance(op.operand, Intrinsic), "This could be a bug in compilation step"
@@ -790,11 +823,7 @@ def type_check_program(program: Program):
                     print(ctx.stack)
                     compiler_error_with_expansion_stack(op.token, 'Loops are not allowed to alter types and amount of elements on the stack.')
                     compiler_note(op.token.loc, 'Expected elements: %s' % expected_types)
-#                     for c in visited_dos[ctx.ip]:
-#                         compiler_note(c[1].loc, "token text : %s" % str(c[1].text))
                     compiler_note(op.token.loc, 'Actual elements: %s' % actual_types)
-#                     for c in ctx.stack:
-#                         compiler_note(c[1].loc, "token text : %s" % str(c[1].text))
                     exit(1)
                 contexts.pop()
                 if len(contexts) > 0:
@@ -804,7 +833,7 @@ def type_check_program(program: Program):
             else:
                 visited_dos[ctx.ip] = copy(ctx.stack)
                 ctx.ip += 1
-                contexts.append(Context(stack=copy(ctx.stack), ip=op.operand, ret_stack=copy(ctx.ret_stack)))
+                contexts.append(Context(stack=copy(ctx.stack), ip=op.operand, outs=copy(ctx.outs)))
                 ctx = contexts[-1]
         else:
             assert False, "unreachable"
@@ -1285,7 +1314,7 @@ def generate_nasm_linux_x86_64(program: Program, out_file_path: str):
         if program.memCapacity > 0:
             out.write("mem: resb %d\n" % program.memCapacity)
 
-assert len(Keyword) == 17, "Exhaustive KEYWORD_NAMES definition."
+assert len(Keyword) == 19, "Exhaustive KEYWORD_NAMES definition."
 KEYWORD_NAMES = {
     'if': Keyword.IF,
     'elif': Keyword.ELIF,
@@ -1304,6 +1333,15 @@ KEYWORD_NAMES = {
     'true': Keyword.TRUE,
     'false': Keyword.FALSE,
     'null': Keyword.NULL,
+    'as': Keyword.AS,
+    '->': Keyword.RETURN,
+}
+
+assert len(DataType) == 3, "Exhaustive DATATYPES definition"
+DATATYPES = {
+    'int': DataType.INT,
+    'ptr': DataType.PTR,
+    'bool': DataType.BOOL,
 }
 
 assert len(Intrinsic) == 48, "Exhaustive INTRINSIC_BY_NAMES definition"
@@ -1377,6 +1415,7 @@ class Function:
     addr: OpAddr
     memories: Dict[str, Memory]
     memCapacity: int
+    signature: Contract
 
 @dataclass
 class Const:
@@ -1654,6 +1693,40 @@ def expand_macro(macro: Macro, expanded_from: Token) -> List[Token]:
         token.expanded_count = expanded_from.expanded_count + 1
     return result
 
+def parse_function_signature(rtokens: List[Token]) -> Contract:
+    signature: Contract = Contract([], [])
+    isIn = True
+    while len(rtokens) > 0:
+        tok = rtokens.pop()
+        if tok.typ == TokenType.WORD:
+            assert isinstance(tok.value, str), "lexer bug"
+            if tok.value in DATATYPES:
+                if isIn:
+                    signature.ins.append(DATATYPES[tok.value])
+                else:
+                    signature.outs.append(DATATYPES[tok.value])
+            else:
+                compiler_error_with_expansion_stack(tok, f"Unexpected word {tok.value} in function signature")
+                exit(1)
+        elif tok.typ == TokenType.KEYWORD:
+            if tok.value == Keyword.RETURN:
+                if not isIn:
+                    compiler_error_with_expansion_stack(tok, "keyword `->` cannot be used multiple times in function definition")
+                isIn = False
+            elif tok.value == Keyword.AS:
+                return signature;
+            else:
+                compiler_error_with_expansion_stack(tok, f"Unexpected Keyword {tok.text} in function signature")
+                exit(1)
+        else:
+            compiler_error_with_expansion_stack(tok, "only types, '->' operator, and as keyword are authorised in function signature")
+            exit(1)
+    compiler_error("file ended before function signature ended")
+    exit(1)
+
+def remap_symboles_to_addresses(symboles: Dict[str, Function]) -> Dict[OpAddr, Contract]:
+    return {func.addr: func.signature for func in symboles.values()}
+
 def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], expansion_limit: int) -> Program:
     stack: List[OpAddr] = []
     program: Program = Program(ops=[], memCapacity=0)
@@ -1716,7 +1789,7 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
             program.ops.append(Op(typ=OpType.PUSH_INT, operand=token.value, token=token));
             ip += 1
         elif token.typ == TokenType.KEYWORD:
-            assert len(Keyword) == 17, "Exhaustive keywords handling in parse_program_from_tokens()"
+            assert len(Keyword) == 19, "Exhaustive keywords handling in parse_program_from_tokens()"
             if token.value == Keyword.TRUE:
                 program.ops.append(Op(typ=OpType.PUSH_BOOL, operand=True, token=token))
                 ip += 1
@@ -1932,8 +2005,9 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                     exit(1)
                 assert isinstance(token.value, str), "lexing bug"
                 check_valid_symbol(token, token.value, macros, functions, memories, consts)
+                signature = parse_function_signature(rtokens)
                 proc_loc = token.loc
-                functions[token.value] = Function(token.loc, proc_addr + 1, {}, 0)
+                functions[token.value] = Function(token.loc, proc_addr + 1, {}, 0, signature)
                 cur_proc = functions[token.value]
             elif token.value == Keyword.ASSERT:
                 if len(rtokens) == 0:
@@ -1956,6 +2030,9 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
             elif token.value in [Keyword.OFFSET, Keyword.RESET]:
                 compiler_error_with_expansion_stack(token, f"keyword `{token.text}` is supported only in compile time evaluation context")
                 exit(1)
+            elif token.value in [Keyword.AS, Keyword.RETURN]:
+                compiler_error_with_expansion_stack(token, f"keyword `{token.text}` is supported only in function signatures")
+                exit(1)
             else:
                 print(token)
                 assert False, 'unreachable';
@@ -1966,7 +2043,7 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
         compiler_error_with_expansion_stack(program.ops[stack.pop()].token, 'unclosed block')
         exit(1)
 
-    return program
+    return program, remap_symboles_to_addresses(functions)
 
 def find_col(line: str, start: int, predicate: Callable[[str], bool]) -> int:
     while start < len(line) and not predicate(line[start]):
@@ -2247,7 +2324,7 @@ if __name__ == '__main__' and '__file__' in globals():
 
         include_paths.append(path.dirname(program_path))
 
-        program = parse_program_from_file(program_path, include_paths, expansion_limit);
+        program, contracts = parse_program_from_file(program_path, include_paths, expansion_limit);
         if control_flow:
             dot_path = basepath + ".dot"
             if not silent:
@@ -2255,7 +2332,7 @@ if __name__ == '__main__' and '__file__' in globals():
             generate_control_flow_graph_as_dot_file(program, dot_path)
             cmd_call_echoed(["dot", "-Tsvg", "-O", dot_path], silent)
         if not unsafe:
-            type_check_program(program)
+            type_check_program(program, contracts)
         if not silent:
             print("[INFO] Generating %s" % (basepath + ".asm"))
         generate_nasm_linux_x86_64(program, basepath + ".asm")

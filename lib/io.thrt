@@ -16,21 +16,21 @@ const AT_FDCWD -100 end
 
 const sizeof(fd) 8 end
 
-fn gets
+fn gets int ptr -> int as
         stdin read
 end
 
-fn puts
+fn puts int ptr as
         stdout write _
 end
 
-fn eputs
+fn eputs int ptr as
         stderr write _
 end
 
 const PUTD_BUFF_CAP 32 end
 
-fn putd
+fn putd int as
         alloc buff sizeof(u8) PUTD_BUFF_CAP * end
         if dup 0 = go
                 "0" puts

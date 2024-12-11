@@ -1,4 +1,4 @@
-fn atoi
+fn atoi() int ptr -> int as
         alloc a 16 end
         a <--> str.write() 
         0

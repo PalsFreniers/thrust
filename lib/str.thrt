@@ -1,4 +1,4 @@
-fn cstrlen
+fn cstrlen ptr -> int as
         alloc s sizeof(ptr) end s .64
         0 during s ,64 @ptr ,8 0 != go
                 s ++64
@@ -10,7 +10,7 @@ define cstr-to-str
         dup cstrlen <>
 end
 
-fn cstreq
+fn cstreq ptr ptr -> bool as
         during
                 if <+> ,8 0 != <+> ,8 0 != & @bool go 
                         <+> ,8 <+> ,8 =
@@ -70,57 +70,57 @@ define str.shl()
         str.data ++64
 end
 
-fn str.chopDelim()
-        <--> dup2 str.read(data) str.write(data)
-        <+> 0 str.write(count)
-        <->
-        during
-                if <+> str.empty() ! go
-                        <+> str.read(data) ,8 <+> !=
-                else
-                        false
-                end
-        go
-        <+> str.shl()
-        <-> dup str.count ++64
-        <-->
-        end _
-        if dup str.empty() ! go
-                dup str.shl()
-        end __
-end
-
-fn str.trimLeft()
-        during
-                if <+> str.empty() ! go
-                        <+> str.read(data) ,8 <+> =
-                else
-                        false
-                end
-        go
-                <+> str.shl()
-        end __
-end
-
-alloc str.equals[a] 16 end
-alloc str.equals[b] 16 end
-
-fn str.equals()
-        str.equals[a] <--> str.write()
-        str.equals[b] <--> str.write()
-        if
-                str.equals[a] str.read(count)
-                str.equals[b] str.read(count) =
-        go
-                0 during
-                        if dup str.equals[a] str.read(count) < go
-                                dup str.equals[a] str.read(data) + ,8
-                                <+> str.equals[b] str.read(data) + ,8
-                                =
-                        else false end
-                go
-                        ++
-                end
-                str.equals[a] str.read(count) =
-        else false end
-end
+//fn str.chopDelim() 
+//        <--> dup2 str.read(data) str.write(data)
+//        <+> 0 str.write(count)
+//        <->
+//        during
+//                if <+> str.empty() ! go
+//                        <+> str.read(data) ,8 <+> !=
+//                else
+//                        false
+//                end
+//        go
+//        <+> str.shl()
+//        <-> dup str.count ++64
+//        <-->
+//        end _
+//        if dup str.empty() ! go
+//                dup str.shl()
+//        end __
+//end
+//
+//fn str.trimLeft()
+//        during
+//                if <+> str.empty() ! go
+//                        <+> str.read(data) ,8 <+> =
+//                else
+//                        false
+//                end
+//        go
+//                <+> str.shl()
+//        end __
+//end
+//
+//alloc str.equals[a] 16 end
+//alloc str.equals[b] 16 end
+//
+//fn str.equals()
+//        str.equals[a] <--> str.write()
+//        str.equals[b] <--> str.write()
+//        if
+//                str.equals[a] str.read(count)
+//                str.equals[b] str.read(count) =
+//        go
+//                0 during
+//                        if dup str.equals[a] str.read(count) < go
+//                                dup str.equals[a] str.read(data) + ,8
+//                                <+> str.equals[b] str.read(data) + ,8
+//                                =
+//                        else false end
+//                go
+//                        ++
+//                end
+//                str.equals[a] str.read(count) =
+//        else false end
+//end
