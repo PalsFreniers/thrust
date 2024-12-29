@@ -1,0 +1,38 @@
+addin "linux"
+
+// struct Arena
+//      len u64
+//      start ptr
+//      curr ptr
+//      next ptr
+// end
+
+const offsetof(Arena.len)  8 offset  end
+const offsetof(Arena.start) 8 offset  end
+const offsetof(Arena.curr)  8 offset  end
+const offsetof(Arena.next)  8 offset  end
+const sizeof(Arena) reset   end
+
+fn createArena() int -> ptr as
+        alloc len 8 end
+        alloc ret 8 end
+        len .64
+        0 0 1 - MAP_ANON MAP_PRIVATE | PROT_READ len ,64 null mmap() ret .64
+        len ,64 ret ,64 @ptr sizeof(Arena) + .64
+        ret ,64 sizeof(Arena) + ret ,64 @ptr offsetof(Arena.start) + .64
+        ret ,64 sizeof(Arena) + ret ,64 @ptr offsetof(Arena.curr) + .64
+        null ret ,64 @ptr offsetof(Arena.next) + .64
+        ret ,64 @ptr
+end 
+
+fn destroyArena() ptr as
+        alloc arena 8 end
+        alloc next 8 end
+        arena .64
+        arena ,64 @ptr offsetof(Arena.next) + ,64 next .64
+        during arena ,64 null != go
+                arena ,64 @ptr offsetof(Arena.len) + arena ,64 munmap()
+                next ,64 arena .64
+                arena ,64 @ptr offsetof(Arena.next) + ,64 next .64
+        end
+end

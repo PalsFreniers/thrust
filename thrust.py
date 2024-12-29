@@ -18,6 +18,7 @@ EXPANSION_DIAGNOSTIC_LIMIT=10
 X86_64_RET_STACK_CAPACITY=4096
 
 debug=False
+Library=False
 
 Loc=Tuple[str, int, int]
 
@@ -41,6 +42,7 @@ class Keyword(Enum):
     NULL=auto()
     AS=auto()
     RETURN=auto()
+    EXTERN=auto()
 
 class DataType(IntEnum):
     INT=auto()
@@ -216,16 +218,18 @@ def type_check_contract(location: Token, ctx: Context, contract: Contract):
 
 # TODO: better error reporting on type checking errors of intrinsics
 # Reported expected and actual types with the location that introduced the actual type
-def type_check_program(program: Program, contracts: Dict[OpAddr, Contract]):
+def type_check_program(program: Program, contracts: Dict[str, Contract], extern):
     visited_dos: Dict[OpAddr, DataStack] = {}
-    contexts: List[Context] = [Context(stack=[], ip=0, outs=[])]
+    contexts: List[Context] = []
     if len(program.ops) == 0:
         exit(0);
-    for faddr, fcontract in reversed(contracts.items()):
+    if not Library and contracts["main"][0].ins != [] and contracts["main"][0].outs != [DataType.INT]:
+        compiler_error(Loc("main", 0, 0), "function main should have signature `fn main -> int`")
+        exit(1)
+    for fname, (fcontract, faddr) in reversed(contracts.items()):
         contexts.append(Context(stack=[(typ, program.ops[faddr].token) for typ in fcontract.ins], ip=faddr, outs=fcontract.outs))
     while len(contexts) > 0:
         ctx = contexts[-1]
-        # TODO: type checking fails on empty programs
         op = program.ops[ctx.ip]
         assert len(OpType) == 18, "Exhaustive ops handling in type_check_program()"
         if op.typ == OpType.PUSH_BOOL:
@@ -251,8 +255,7 @@ def type_check_program(program: Program, contracts: Dict[OpAddr, Contract]):
             ctx.stack.append((DataType.PTR, op.token))
             ctx.ip += 1
         elif op.typ == OpType.FUNCTION:
-            assert isinstance(op.operand, OpAddr)
-            ctx.ip = op.operand
+            ctx.ip += 1
         elif op.typ == OpType.STACK_FRAME:
             ctx.ip += 1
         elif op.typ == OpType.RETURN:
@@ -265,8 +268,14 @@ def type_check_program(program: Program, contracts: Dict[OpAddr, Contract]):
                 exit(1)
             contexts.pop()
         elif op.typ == OpType.CALL:
-            assert isinstance(op.operand, OpAddr)
-            type_check_contract(op.token, ctx, contracts[op.operand])
+            assert isinstance(op.operand, str)
+            if op.operand in extern:
+                type_check_contract(op.token, ctx, extern[op.operand])
+            elif op.operand in contracts:
+                type_check_contract(op.token, ctx, contracts[op.operand][0])
+            else:
+                compiler_error_with_expansion_stack(op.token, "Unknown Function: `%s`" % op.operand)
+                exit(1)
             ctx.ip += 1
         elif op.typ == OpType.INTRINSIC:
             assert len(Intrinsic) == 48, "Exhaustive intrinsic handling in type_check_program()"
@@ -844,53 +853,66 @@ def type_check_program(program: Program, contracts: Dict[OpAddr, Contract]):
                 exit(1)
             contexts.pop()
 
-def generate_nasm_linux_x86_64(program: Program, out_file_path: str):
+def generate_nasm_linux_x86_64(program: Program, out_file_path: str, extern: List[str]):
     strs: List[bytes] = []
     with open(out_file_path, "w") as out:
+        if Library:
+            out.write("extern print\n")
         out.write("BITS 64\n")
         out.write("segment .text\n")
-        out.write("print:\n")
-        out.write("    mov     r9, -3689348814741910323\n")
-        out.write("    sub     rsp, 40\n")
-        out.write("    mov     BYTE [rsp+31], 10\n")
-        out.write("    lea     rcx, [rsp+30]\n")
-        out.write(".L2:\n")
-        out.write("    mov     rax, rdi\n")
-        out.write("    lea     r8, [rsp+32]\n")
-        out.write("    mul     r9\n")
-        out.write("    mov     rax, rdi\n")
-        out.write("    sub     r8, rcx\n")
-        out.write("    shr     rdx, 3\n")
-        out.write("    lea     rsi, [rdx+rdx*4]\n")
-        out.write("    add     rsi, rsi\n")
-        out.write("    sub     rax, rsi\n")
-        out.write("    add     eax, 48\n")
-        out.write("    mov     BYTE [rcx], al\n")
-        out.write("    mov     rax, rdi\n")
-        out.write("    mov     rdi, rdx\n")
-        out.write("    mov     rdx, rcx\n")
-        out.write("    sub     rcx, 1\n")
-        out.write("    cmp     rax, 9\n")
-        out.write("    ja      .L2\n")
-        out.write("    lea     rax, [rsp+32]\n")
-        out.write("    mov     edi, 1\n")
-        out.write("    sub     rdx, rax\n")
-        out.write("    xor     eax, eax\n")
-        out.write("    lea     rsi, [rsp+32+rdx]\n")
-        out.write("    mov     rdx, r8\n")
-        out.write("    mov     rax, 1\n")
-        out.write("    syscall\n")
-        out.write("    add     rsp, 40\n")
-        out.write("    ret\n")
-        out.write("global _start\n")
-        out.write("_start:\n")
-        out.write("    mov [args_ptr], rsp\n")
-        out.write("    mov rax, ret_stack_end\n")
-        out.write("    mov [ret_stack_rsp], rax\n")
+        if not Library:
+            for n in extern:
+                out.write("extern %s\n" % n)
+            out.write("global print\n")
+            out.write("print:\n")
+            out.write("    mov     r9, -3689348814741910323\n")
+            out.write("    sub     rsp, 40\n")
+            out.write("    mov     BYTE [rsp+31], 10\n")
+            out.write("    lea     rcx, [rsp+30]\n")
+            out.write(".L2:\n")
+            out.write("    mov     rax, rdi\n")
+            out.write("    lea     r8, [rsp+32]\n")
+            out.write("    mul     r9\n")
+            out.write("    mov     rax, rdi\n")
+            out.write("    sub     r8, rcx\n")
+            out.write("    shr     rdx, 3\n")
+            out.write("    lea     rsi, [rdx+rdx*4]\n")
+            out.write("    add     rsi, rsi\n")
+            out.write("    sub     rax, rsi\n")
+            out.write("    add     eax, 48\n")
+            out.write("    mov     BYTE [rcx], al\n")
+            out.write("    mov     rax, rdi\n")
+            out.write("    mov     rdi, rdx\n")
+            out.write("    mov     rdx, rcx\n")
+            out.write("    sub     rcx, 1\n")
+            out.write("    cmp     rax, 9\n")
+            out.write("    ja      .L2\n")
+            out.write("    lea     rax, [rsp+32]\n")
+            out.write("    mov     edi, 1\n")
+            out.write("    sub     rdx, rax\n")
+            out.write("    xor     eax, eax\n")
+            out.write("    lea     rsi, [rsp+32+rdx]\n")
+            out.write("    mov     rdx, r8\n")
+            out.write("    mov     rax, 1\n")
+            out.write("    syscall\n")
+            out.write("    add     rsp, 40\n")
+            out.write("    ret\n")
+            out.write("global _start\n")
+            out.write("_start:\n")
+            out.write("    mov [args_ptr], rsp\n")
+            out.write("    mov rax, ret_stack_end\n")
+            out.write("    mov [ret_stack_rsp], rax\n")
+            out.write("    mov rax, rsp\n")
+            out.write("    mov rsp, [ret_stack_rsp]\n")
+            out.write("    call main\n")
+            out.write("    mov [ret_stack_rsp], rsp\n")
+            out.write("    mov rsp, rax\n")
+            out.write("    pop qword rdi\n")
+            out.write("    mov rax, 60\n")
+            out.write("    syscall\n")
         for ip in range(len(program.ops)):
             op = program.ops[ip]
             assert len(OpType) == 18, "Exhaustive ops handling in generate_nasm_linux_x86_64"
-            out.write("addr_%d:\n" % ip)
             if op.typ == OpType.PUSH_INT:
                 assert isinstance(op.operand, int), "This could be a bug in the parsing step"
                 out.write("    ;; -- push int %d --\n" % op.operand)
@@ -936,19 +958,23 @@ def generate_nasm_linux_x86_64(program: Program, out_file_path: str):
                 out.write("    ;; -- if --\n")
             elif op.typ == OpType.WHILE:
                 out.write("    ;; -- while --\n")
+                out.write("addr_%d:\n" % ip)
             elif op.typ == OpType.ELSE:
                 out.write("    ;; -- else --\n")
                 assert isinstance(op.operand, OpAddr), "This could be a bug in the parsing step"
                 out.write("    jmp addr_%d\n" % op.operand)
+                out.write("addr_%s:\n" % (ip + 1))
             elif op.typ == OpType.ELIF:
                 out.write("    ;; -- elif --\n")
                 assert isinstance(op.operand, OpAddr), f"This could be a bug in the parsing step: {op.operand}"
                 out.write("    jmp addr_%d\n" % op.operand)
+                out.write("addr_%s:\n" % (ip + 1))
             elif op.typ == OpType.END:
                 assert isinstance(op.operand, int), "This could be a bug in the parsing step"
                 out.write("    ;; -- end --\n")
                 if ip + 1 != op.operand:
                     out.write("    jmp addr_%d\n" % op.operand)
+                out.write("addr_%d:\n" % (ip + 1))
             elif op.typ == OpType.DO:
                 out.write("    ;; -- do --\n")
                 out.write("    pop rax\n")
@@ -957,8 +983,10 @@ def generate_nasm_linux_x86_64(program: Program, out_file_path: str):
                 out.write("    jz addr_%d\n" % op.operand)
             elif op.typ == OpType.FUNCTION:
                 out.write("    ;; -- func --\n")
-                assert isinstance(op.operand, OpAddr), "This could be a bug in the parsing step"
-                out.write("    jmp addr_%d\n" % op.operand)
+                assert isinstance(op.operand, str)
+                if Library:
+                    out.write("global %s\n" % op.operand)
+                out.write("%s:\n" % op.operand)
             elif op.typ == OpType.STACK_FRAME:
                 assert isinstance(op.operand, int)
                 out.write("    ;; -- stack prep --\n")
@@ -976,10 +1004,10 @@ def generate_nasm_linux_x86_64(program: Program, out_file_path: str):
                 out.write("    ret\n")
             elif op.typ == OpType.CALL:
                 out.write("    ;; -- call --\n")
-                assert isinstance(op.operand, OpAddr), "This could be a bug in the parsing step"
+                assert isinstance(op.operand, str), "This could be a bug in the parsing step"
                 out.write("    mov rax, rsp\n")
                 out.write("    mov rsp, [ret_stack_rsp]\n")
-                out.write("    call addr_%d\n" % op.operand)
+                out.write("    call %s\n" % op.operand)
                 out.write("    mov [ret_stack_rsp], rsp\n")
                 out.write("    mov rsp, rax\n")
             elif op.typ == OpType.INTRINSIC:
@@ -1298,8 +1326,6 @@ def generate_nasm_linux_x86_64(program: Program, out_file_path: str):
                     assert False, "unreachable"
             else:
                 assert False, "unreachable"
-
-        out.write("addr_%d:\n" % len(program.ops))
         out.write("    mov rax, 60\n")
         out.write("    mov rdi, 0\n")
         out.write("    syscall\n")
@@ -1307,14 +1333,24 @@ def generate_nasm_linux_x86_64(program: Program, out_file_path: str):
         for index, s in enumerate(strs):
             out.write("str_%d: db %s\n" % (index, ','.join(map(hex, list(s)))))
         out.write("segment .bss\n")
-        out.write("args_ptr: resq 1\n")
-        out.write("ret_stack_rsp: resq 1\n")
-        out.write("ret_stack: resq %d\n" % X86_64_RET_STACK_CAPACITY)
-        out.write("ret_stack_end:\n")
+        if Library:
+            out.write("extern args_ptr\n")
+            out.write("extern ret_stack_rsp\n")
+            out.write("extern ret_stack\n")
+            out.write("extern ret_stack_end\n")
+        else:
+            out.write("global args_ptr\n")
+            out.write("args_ptr: resq 1\n")
+            out.write("global ret_stack_rsp\n")
+            out.write("ret_stack_rsp: resq 1\n")
+            out.write("global ret_stack\n")
+            out.write("ret_stack: resq %d\n" % X86_64_RET_STACK_CAPACITY)
+            out.write("global ret_stack_end\n")
+            out.write("ret_stack_end:\n")
         if program.memCapacity > 0:
             out.write("mem: resb %d\n" % program.memCapacity)
 
-assert len(Keyword) == 19, "Exhaustive KEYWORD_NAMES definition."
+assert len(Keyword) == 20, "Exhaustive KEYWORD_NAMES definition."
 KEYWORD_NAMES = {
     'if': Keyword.IF,
     'elif': Keyword.ELIF,
@@ -1335,6 +1371,7 @@ KEYWORD_NAMES = {
     'null': Keyword.NULL,
     'as': Keyword.AS,
     '->': Keyword.RETURN,
+    'extern': Keyword.EXTERN,
 }
 
 assert len(DataType) == 3, "Exhaustive DATATYPES definition"
@@ -1416,6 +1453,7 @@ class Function:
     memories: Dict[str, Memory]
     memCapacity: int
     signature: Contract
+    name: str
 
 @dataclass
 class Const:
@@ -1693,7 +1731,7 @@ def expand_macro(macro: Macro, expanded_from: Token) -> List[Token]:
         token.expanded_count = expanded_from.expanded_count + 1
     return result
 
-def parse_function_signature(rtokens: List[Token]) -> Contract:
+def parse_function_signature(rtokens: List[Token], last: Keyword) -> Contract:
     signature: Contract = Contract([], [])
     isIn = True
     while len(rtokens) > 0:
@@ -1713,7 +1751,7 @@ def parse_function_signature(rtokens: List[Token]) -> Contract:
                 if not isIn:
                     compiler_error_with_expansion_stack(tok, "keyword `->` cannot be used multiple times in function definition")
                 isIn = False
-            elif tok.value == Keyword.AS:
+            elif tok.value == last:
                 return signature;
             else:
                 compiler_error_with_expansion_stack(tok, f"Unexpected Keyword {tok.text} in function signature")
@@ -1725,7 +1763,7 @@ def parse_function_signature(rtokens: List[Token]) -> Contract:
     exit(1)
 
 def remap_symboles_to_addresses(symboles: Dict[str, Function]) -> Dict[OpAddr, Contract]:
-    return {func.addr: func.signature for func in symboles.values()}
+    return {func.name: (func.signature, func.addr) for func in symboles.values()}
 
 def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], expansion_limit: int) -> Program:
     stack: List[OpAddr] = []
@@ -1733,6 +1771,7 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
     rtokens: List[Token] = list(reversed(tokens))
     macros: Dict[str, Macro] = {}
     functions: Dict[str, Function] = {}
+    externs: Dict[str, Function] = {}
     memories: Dict[str, Memory] = {}
     consts: Dict[str, Const] = {}
     cur_proc: Optional[Function] = None
@@ -1758,7 +1797,10 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                 program.ops.append(Op(typ=OpType.PUSH_MEM, token=token, operand=memories[token.value].addr))
                 ip += 1
             elif token.value in functions:
-                program.ops.append(Op(typ=OpType.CALL, token=token, operand=functions[token.value].addr))
+                program.ops.append(Op(typ=OpType.CALL, token=token, operand=token.value))
+                ip += 1
+            elif token.value in externs:
+                program.ops.append(Op(typ=OpType.CALL, token=token, operand=token.value))
                 ip += 1
             elif token.value in consts:
                 c = consts[token.value]
@@ -1789,7 +1831,7 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
             program.ops.append(Op(typ=OpType.PUSH_INT, operand=token.value, token=token));
             ip += 1
         elif token.typ == TokenType.KEYWORD:
-            assert len(Keyword) == 19, "Exhaustive keywords handling in parse_program_from_tokens()"
+            assert len(Keyword) == 20, "Exhaustive keywords handling in parse_program_from_tokens()"
             if token.value == Keyword.TRUE:
                 program.ops.append(Op(typ=OpType.PUSH_BOOL, operand=True, token=token))
                 ip += 1
@@ -1836,7 +1878,7 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                     stack.append(ip)
                     ip += 1
                 elif program.ops[pre_do_ip].typ == OpType.ELIF:
-                    program.ops[pre_do_ip].operand = ip
+                    program.ops[pre_do_ip].operand = ip + 1
                     program.ops[do_ip].operand = ip + 1
                     stack.append(ip)
                     ip += 1
@@ -1847,7 +1889,7 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                 block_ip = stack.pop()
                 if program.ops[block_ip].typ == OpType.ELSE:
                     program.ops.append(Op(typ=OpType.END, token=token))
-                    program.ops[block_ip].operand = ip
+                    program.ops[block_ip].operand = ip + 1
                     program.ops[ip].operand = ip + 1
                 elif program.ops[block_ip].typ == OpType.DO:
                     program.ops.append(Op(typ=OpType.END, token=token))
@@ -1862,7 +1904,7 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                         program.ops[ip].operand = ip + 1
                         program.ops[block_ip].operand = ip + 1
                     elif program.ops[pre_do_ip].typ == OpType.ELIF:
-                        program.ops[pre_do_ip].operand = ip
+                        program.ops[pre_do_ip].operand = ip + 1
                         program.ops[ip].operand = ip + 1
                         program.ops[block_ip].operand = ip + 1
                     else:
@@ -1871,9 +1913,6 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                 elif program.ops[block_ip].typ == OpType.STACK_FRAME:
                     assert cur_proc is not None
                     program.ops[block_ip].operand = cur_proc.memCapacity
-                    block_ip = stack.pop()
-                    assert program.ops[block_ip].typ is OpType.FUNCTION
-                    program.ops[block_ip].operand = ip + 1
                     program.ops.append(Op(typ=OpType.RETURN, token=token, operand=cur_proc.memCapacity))
                     cur_proc = None
                 else:
@@ -1989,13 +2028,7 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                     compiler_error_with_expansion_stack(token, "nested procedure not allowed")
                     compiler_note(cur_proc.loc, "current procedure stating here")
                     exit(1)
-                program.ops.append(Op(typ=OpType.FUNCTION, token=token))
-                proc_addr = ip
-                stack.append(ip)
-                ip += 1
-                program.ops.append(Op(typ=OpType.STACK_FRAME, token=token))
-                stack.append(ip)
-                ip += 1
+                tok = token
                 if len(rtokens) == 0:
                     compiler_error_with_expansion_stack(token, "expected procedure name but found nothing")
                     exit(1)
@@ -2004,11 +2037,43 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                     compiler_error_with_expansion_stack(token, "expected function name to be %s but got %s" % (human(TokenType.WORD), human(token.typ)))
                     exit(1)
                 assert isinstance(token.value, str), "lexing bug"
+                for c in token.value:
+                    if not (c.isalnum() or c == '_'):
+                        compiler_error_with_expansion_stack(token, "error function names can only have alphanumerical characters or `_` character")
+                        exit(1)
+                program.ops.append(Op(typ=OpType.FUNCTION, token=tok, operand=token.value))
+                proc_addr = ip
+                ip += 1
+                program.ops.append(Op(typ=OpType.STACK_FRAME, token=token))
+                stack.append(ip)
+                ip += 1
                 check_valid_symbol(token, token.value, macros, functions, memories, consts)
-                signature = parse_function_signature(rtokens)
+                signature = parse_function_signature(rtokens, Keyword.AS)
                 proc_loc = token.loc
-                functions[token.value] = Function(token.loc, proc_addr + 1, {}, 0, signature)
+                functions[token.value] = Function(token.loc, proc_addr + 1, {}, 0, signature, token.value)
                 cur_proc = functions[token.value]
+            elif token.value == Keyword.EXTERN:
+                if cur_proc is not None:
+                    compiler_error_with_expansion_stack(token, "nested procedure not allowed")
+                    compiler_note(cur_proc.loc, "current procedure stating here")
+                    exit(1)
+                tok = token
+                if len(rtokens) == 0:
+                    compiler_error_with_expansion_stack(token, "expected procedure name but found nothing")
+                    exit(1)
+                token = rtokens.pop()
+                if token.typ != TokenType.WORD:
+                    compiler_error_with_expansion_stack(token, "expected function name to be %s but got %s" % (human(TokenType.WORD), human(token.typ)))
+                    exit(1)
+                assert isinstance(token.value, str), "lexing bug"
+                for c in token.value:
+                    if not (c.isalnum() or c == '_'):
+                        compiler_error_with_expansion_stack(token, "error function names can only have alphanumerical characters or `_` character")
+                        exit(1)
+                check_valid_symbol(token, token.value, macros, functions, memories, consts)
+                signature = parse_function_signature(rtokens, Keyword.END)
+                proc_loc = token.loc
+                externs[token.value] = Function(token.loc, 0, {}, 0, signature, token.value)
             elif token.value == Keyword.ASSERT:
                 if len(rtokens) == 0:
                     compiler_error_with_expansion_stack(token, "expected procedure name but found nothing")
@@ -2043,7 +2108,11 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
         compiler_error_with_expansion_stack(program.ops[stack.pop()].token, 'unclosed block')
         exit(1)
 
-    return program, remap_symboles_to_addresses(functions)
+    if not Library and not "main" in functions:
+        compiler_error_with_expansion_stack(program.ops[0].token, 'unable to find main function in file')
+        exit(1)
+
+    return program, remap_symboles_to_addresses(functions), {func.name: func.signature for func in externs.values()}
 
 def find_col(line: str, start: int, predicate: Callable[[str], bool]) -> int:
     while start < len(line) and not predicate(line[start]):
@@ -2276,6 +2345,7 @@ if __name__ == '__main__' and '__file__' in globals():
         control_flow = False
         run = False
         output_path = None
+        linkArgs = []
         while len(argv) > 0:
             arg, *argv = argv
             if arg == '-r':
@@ -2288,6 +2358,15 @@ if __name__ == '__main__' and '__file__' in globals():
                     print("[ERROR] no argument is provided for parameter -o", file=sys.stderr)
                     exit(1)
                 output_path, *argv = argv
+            elif arg == '-lib':
+                Library = True
+            elif arg == '-z':
+                if len(argv) == 0:
+                    usage(compiler_name)
+                    print("[ERROR] no argument is provided for parameter -z", file=sys.stderr)
+                    exit(1)
+                tmpArg, *argv = argv
+                linkArgs.append(tmpArg)
             elif arg == '-cf':
                 control_flow = True
             else:
@@ -2324,7 +2403,7 @@ if __name__ == '__main__' and '__file__' in globals():
 
         include_paths.append(path.dirname(program_path))
 
-        program, contracts = parse_program_from_file(program_path, include_paths, expansion_limit);
+        program, contracts, externs = parse_program_from_file(program_path, include_paths, expansion_limit);
         if control_flow:
             dot_path = basepath + ".dot"
             if not silent:
@@ -2332,12 +2411,15 @@ if __name__ == '__main__' and '__file__' in globals():
             generate_control_flow_graph_as_dot_file(program, dot_path)
             cmd_call_echoed(["dot", "-Tsvg", "-O", dot_path], silent)
         if not unsafe:
-            type_check_program(program, contracts)
+            type_check_program(program, contracts, externs)
         if not silent:
             print("[INFO] Generating %s" % (basepath + ".asm"))
-        generate_nasm_linux_x86_64(program, basepath + ".asm")
+        generate_nasm_linux_x86_64(program, basepath + ".asm", [names for names in externs.keys()])
         cmd_call_echoed(["nasm", "-felf64", basepath + ".asm"], silent)
-        cmd_call_echoed(["ld", "-o", basepath, basepath + ".o"], silent)
+        if not Library:
+            cmd_call_echoed(["ld", "-o", basepath, basepath + ".o"] + linkArgs, silent)
+        else:
+            cmd_call_echoed(["ar", "rcs", basepath + '.a', basepath + ".o"] + linkArgs, silent)
         if run:
             exit(cmd_call_echoed([basepath] + argv, silent))
     elif subcommand == "help":

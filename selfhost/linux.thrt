@@ -1,0 +1,28 @@
+const SYS_READ     0  end
+const SYS_WRITE    1  end
+const SYS_OPEN     2  end
+const SYS_CLOSE    3  end
+const SYS_MMAP     9  end
+const SYS_MUNMAP   11  end
+const SYS_EXIT     60 end
+
+define _read SYS_READ call3 end
+fn read() int ptr int -> int as _read end
+
+define _write SYS_WRITE call3 end
+fn write() int ptr int -> int as _write end
+
+define _open SYS_OPEN call3 end
+fn open() int int ptr -> int as _open end
+
+define _close SYS_CLOSE call1 _ end
+fn close() int as _close end
+
+define _mmap SYS_MMAP call6 @ptr end
+fn mmap() int int int int int ptr -> ptr as _mmap end
+
+define _munmap SYS_MUNMAP call2 _ end
+fn mmap() int ptr as _munmap end
+
+define _exit SYS_EXIT call1 _ end
+fn exit() int as _exit end
