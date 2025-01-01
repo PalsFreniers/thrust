@@ -1777,6 +1777,7 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
     cur_proc: Optional[Function] = None
     ip: OpAddr = 0;
     iota: List[int] = [0]
+    includes: List[str] = []
     while len(rtokens) > 0:
         token = rtokens.pop()
         assert len(TokenType) == 6, "Exhaustive token handling in parse_program_from_tokens"
@@ -1950,7 +1951,10 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                         if token.expanded_count >= expansion_limit:
                             compiler_error_with_expansion_stack(token, "the include exceeded the expansion limit (it expanded %d times)" % token.expanded_count)
                             exit(1)
-                        rtokens += reversed(lex_file(path.join(include_path, token.value + PORTH_EXT), token))
+                        tmp = reversed(lex_file(path.join(include_path, token.value + PORTH_EXT), token))
+                        if not path.join(include_path, token.value + PORTH_EXT) in includes:
+                            rtokens += tmp
+                            includes.append(path.join(include_path, token.value + PORTH_EXT))
                         file_included = True
                         break
                     except FileNotFoundError:

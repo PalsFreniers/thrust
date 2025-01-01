@@ -1,0 +1,7 @@
+addin "testx"
+addin "testx"
+
+fn main -> int as
+        testx
+        0
+end
