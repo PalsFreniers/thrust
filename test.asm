@@ -1,5 +1,7 @@
 BITS 64
 segment .text
+extern thrust_malloc
+extern thrust_free
 global print
 print:
     mov     r9, -3689348814741910323
@@ -48,42 +50,31 @@ _start:
     mov rax, 60
     syscall
     ;; -- func --
-testx:
-    ;; -- stack prep --
-    mov [ret_stack_rsp], rsp
-    mov rsp, rax
-    ;; -- push str --
-    mov rax, 12
-    push rax
-    push str_0
-    ;; -- push int 1 --
-    mov rax, 1
-    push rax
-    ;; -- push int 1 --
-    mov rax, 1
-    push rax
-    ;; -- syscall3 --
-    pop rax
-    pop rdi
-    pop rsi
-    pop rdx
-    syscall
-    push rax
-    ;; -- drop --
-    pop rax
-    ;; -- return --
-    mov rax, rsp
-    mov rsp, [ret_stack_rsp]
-    ret
-    ;; -- func --
+global main
 main:
     ;; -- stack prep --
     mov [ret_stack_rsp], rsp
     mov rsp, rax
+    ;; -- push int 15 --
+    mov rax, 15
+    push rax
     ;; -- call --
     mov rax, rsp
     mov rsp, [ret_stack_rsp]
-    call testx
+    call thrust_malloc
+    mov [ret_stack_rsp], rsp
+    mov rsp, rax
+    ;; -- dup --
+    pop rax
+    push rax
+    push rax
+    ;; -- print --
+    pop rdi
+    call print
+    ;; -- call --
+    mov rax, rsp
+    mov rsp, [ret_stack_rsp]
+    call thrust_free
     mov [ret_stack_rsp], rsp
     mov rsp, rax
     ;; -- push int 0 --
@@ -97,7 +88,6 @@ main:
     mov rdi, 0
     syscall
 segment .data
-str_0: db 0x48,0x65,0x6c,0x6c,0x6f,0x20,0x57,0x6f,0x72,0x6c,0x64,0xa
 segment .bss
 global args_ptr
 args_ptr: resq 1

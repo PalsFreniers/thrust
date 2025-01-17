@@ -984,8 +984,7 @@ def generate_nasm_linux_x86_64(program: Program, out_file_path: str, extern: Lis
             elif op.typ == OpType.FUNCTION:
                 out.write("    ;; -- func --\n")
                 assert isinstance(op.operand, str)
-                if Library:
-                    out.write("global %s\n" % op.operand)
+                out.write("global %s\n" % op.operand)
                 out.write("%s:\n" % op.operand)
             elif op.typ == OpType.STACK_FRAME:
                 assert isinstance(op.operand, int)
