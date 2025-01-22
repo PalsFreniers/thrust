@@ -43,6 +43,7 @@ class Keyword(Enum):
     AS=auto()
     RETURN=auto()
     EXTERN=auto()
+    STRUCT=auto()
 
 class DataType(IntEnum):
     INT=auto()
@@ -1349,7 +1350,7 @@ def generate_nasm_linux_x86_64(program: Program, out_file_path: str, extern: Lis
         if program.memCapacity > 0:
             out.write("mem: resb %d\n" % program.memCapacity)
 
-assert len(Keyword) == 20, "Exhaustive KEYWORD_NAMES definition."
+assert len(Keyword) == 21, "Exhaustive KEYWORD_NAMES definition."
 KEYWORD_NAMES = {
     'if': Keyword.IF,
     'elif': Keyword.ELIF,
@@ -1371,6 +1372,7 @@ KEYWORD_NAMES = {
     'as': Keyword.AS,
     '->': Keyword.RETURN,
     'extern': Keyword.EXTERN,
+    'struct': Keyword.STRUCT,
 }
 
 assert len(DataType) == 3, "Exhaustive DATATYPES definition"
@@ -1460,7 +1462,13 @@ class Const:
     value: int
     typ: DataType
 
-def check_valid_symbol(token: Token, name: str, macros: Dict[str, Macro], functions: Dict[str, Function], memories: Dict[str, Memory], consts: Dict[str, Const]):
+@dataclass
+class Struct:
+    loc: Loc
+    name: str
+    types: List[DataType]
+
+def check_valid_symbol(token: Token, name: str, macros: Dict[str, Macro], functions: Dict[str, Function], memories: Dict[str, Memory], consts: Dict[str, Const], structs):
     if name in macros:
         compiler_error_with_expansion_stack(token, "redefinition of already existing macro `%s`" % name)
         compiler_note(macros[name].loc, "the first definition is located here")
@@ -1475,6 +1483,10 @@ def check_valid_symbol(token: Token, name: str, macros: Dict[str, Macro], functi
         exit(1)
     if name in consts:
         compiler_error_with_expansion_stack(token, "redefinition of already existing constant `%s`" % name)
+        compiler_note(consts[name].loc, "the first definition is located here")
+        exit(1)
+    if name in structs:
+        compiler_error_with_expansion_stack(token, "redefinition of already existing struct `%s`" % name)
         compiler_note(consts[name].loc, "the first definition is located here")
         exit(1)
     if name in INTRINSIC_BY_NAMES:
@@ -1730,7 +1742,7 @@ def expand_macro(macro: Macro, expanded_from: Token) -> List[Token]:
         token.expanded_count = expanded_from.expanded_count + 1
     return result
 
-def parse_function_signature(rtokens: List[Token], last: Keyword) -> Contract:
+def parse_function_signature(rtokens: List[Token], structs: Dict[str, Struct], last: Keyword) -> Contract:
     signature: Contract = Contract([], [])
     isIn = True
     while len(rtokens) > 0:
@@ -1742,6 +1754,11 @@ def parse_function_signature(rtokens: List[Token], last: Keyword) -> Contract:
                     signature.ins.append(DATATYPES[tok.value])
                 else:
                     signature.outs.append(DATATYPES[tok.value])
+            elif tok.value in structs:
+                if isIn:
+                    signature.ins += structs[tok.value].types
+                else:
+                    signature.outs += structs[tok.value].types
             else:
                 compiler_error_with_expansion_stack(tok, f"Unexpected word {tok.value} in function signature")
                 exit(1)
@@ -1774,6 +1791,7 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
     memories: Dict[str, Memory] = {}
     consts: Dict[str, Const] = {}
     cur_proc: Optional[Function] = None
+    structs: Dict[str, Struct] = {}
     ip: OpAddr = 0;
     iota: List[int] = [0]
     includes: List[str] = []
@@ -1831,7 +1849,7 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
             program.ops.append(Op(typ=OpType.PUSH_INT, operand=token.value, token=token));
             ip += 1
         elif token.typ == TokenType.KEYWORD:
-            assert len(Keyword) == 20, "Exhaustive keywords handling in parse_program_from_tokens()"
+            assert len(Keyword) == 21, "Exhaustive keywords handling in parse_program_from_tokens()"
             if token.value == Keyword.TRUE:
                 program.ops.append(Op(typ=OpType.PUSH_BOOL, operand=True, token=token))
                 ip += 1
@@ -1961,6 +1979,36 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                 if not file_included:
                     compiler_error_with_expansion_stack(token, "file `%s` not found" % (token.value + PORTH_EXT))
                     exit(1)
+            elif token.value == Keyword.STRUCT:
+                if len(rtokens) == 0:
+                    compiler_error_with_expansion_stack(token, "expected struct name but found nothing")
+                    exit(1)
+                token = rtokens.pop()
+                if token.typ != TokenType.WORD:
+                    compiler_error_with_expansion_stack(token, "expected struct name to be %s but found %s" % (human(TokenType.WORD), human(token.typ)))
+                    exit(1)
+                assert isinstance(token.value, str), "This is probably a bug in the lexer"
+                check_valid_symbol(token, token.value, macros, functions, memories, consts, structs)
+                struct_name = token.value
+                struct_loc = token.loc
+                struct_member = []
+                while len(rtokens) > 0:
+                    token = rtokens.pop()
+                    if token.value == Keyword.END:
+                        break
+                    if token.typ != TokenType.WORD:
+                        compiler_error_with_expansion_stack(token, "expected struct member type to be %s but found %s" % (human(TokenType.WORD), human(token.typ)))
+                        exit(1)
+                    assert isinstance(token.value, str), "This is probably a bug in the lexer"
+                    if not token.value in DATATYPES:
+                        compiler_error_with_expansion_stack(token, "expected struct member value to be a type")
+                        exit(1)
+                    member_type = DATATYPES[token.value]
+                    struct_member.append(member_type)
+                if len(struct_member) == 0:
+                    compiler_error_with_expansion_stack(struct_loc, "cannot create empty structure")
+                    exit(1)
+                structs[struct_name] = Struct(struct_loc, struct_name, struct_member)
             elif token.value == Keyword.MEMORY:
                 if len(rtokens) == 0:
                     compiler_error_with_expansion_stack(token, "expected alloc name but found nothing")
@@ -1977,11 +2025,11 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                     compiler_error_with_expansion_stack(token, f"Memory size must be of type {DataType.INT} but it is of type {mem_size_type}")
                     exit(1)
                 if cur_proc is None:
-                    check_valid_symbol(token, token.value, macros, functions, memories, consts)
+                    check_valid_symbol(token, token.value, macros, functions, memories, consts, structs)
                     memories[memname] = Memory(memloc, program.memCapacity)
                     program.memCapacity += memsize
                 else:
-                    check_valid_symbol(token, token.value, macros, functions, cur_proc.memories, consts)
+                    check_valid_symbol(token, token.value, macros, functions, cur_proc.memories, consts, structs)
                     cur_proc.memories[memname] = Memory(memloc, cur_proc.memCapacity)
                     cur_proc.memCapacity += memsize
             elif token.value == Keyword.CONST:
@@ -1993,7 +2041,7 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                     compiler_error_with_expansion_stack(token, "expected constant name to be %s but found %s" % (human(TokenType.WORD), human(token.typ)))
                     exit(1)
                 assert isinstance(token.value, str), "This is probably a bug in the lexer"
-                check_valid_symbol(token, token.value, macros, functions, memories, consts)
+                check_valid_symbol(token, token.value, macros, functions, memories, consts, structs)
                 constname = token.value
                 constloc = token.loc
                 constsize, const_type = eval_expression(rtokens, macros, consts, functions, iota)
@@ -2007,7 +2055,7 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                     compiler_error_with_expansion_stack(token, "expected macro name to be %s but found %s" % (human(TokenType.WORD), human(token.typ)))
                     exit(1)
                 assert isinstance(token.value, str), "This is probably a bug in the lexer"
-                check_valid_symbol(token, token.value, macros, functions, memories, consts)
+                check_valid_symbol(token, token.value, macros, functions, memories, consts, structs)
                 macro = Macro(token.loc, [])
                 macros[token.value] = macro
                 nesting_depth = 0
@@ -2050,8 +2098,8 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                 program.ops.append(Op(typ=OpType.STACK_FRAME, token=token))
                 stack.append(ip)
                 ip += 1
-                check_valid_symbol(token, token.value, macros, functions, memories, consts)
-                signature = parse_function_signature(rtokens, Keyword.AS)
+                check_valid_symbol(token, token.value, macros, functions, memories, consts, structs)
+                signature = parse_function_signature(rtokens, structs, Keyword.AS)
                 proc_loc = token.loc
                 functions[token.value] = Function(token.loc, proc_addr + 1, {}, 0, signature, token.value)
                 cur_proc = functions[token.value]
@@ -2073,8 +2121,8 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                     if not (c.isalnum() or c == '_'):
                         compiler_error_with_expansion_stack(token, "error function names can only have alphanumerical characters or `_` character")
                         exit(1)
-                check_valid_symbol(token, token.value, macros, functions, memories, consts)
-                signature = parse_function_signature(rtokens, Keyword.END)
+                check_valid_symbol(token, token.value, macros, functions, memories, consts, structs)
+                signature = parse_function_signature(rtokens, structs, Keyword.END)
                 proc_loc = token.loc
                 externs[token.value] = Function(token.loc, 0, {}, 0, signature, token.value)
             elif token.value == Keyword.ASSERT:
