@@ -1,0 +1,15 @@
+fn memset ptr int int -> ptr as
+        // params
+        alloc dst 8 end
+        alloc byte 1 end
+        alloc len 8 end
+        len .64
+        byte .8
+        dst .64
+        // loop
+        0 during dup len ,64 < go
+                dst ,64 @ptr <+> + byte ,8 <> .8
+                1 +
+        end
+        dst ,64
+end

@@ -1,0 +1,3 @@
+extern memset ptr int int -> ptr end
+extern memcpy ptr ptr int -> ptr end
+extern bzero ptr int -> ptr end
