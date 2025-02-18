@@ -1,0 +1,41 @@
+addin "std"
+
+type code : int32
+type size : int64
+
+struct Arena is
+        start : ptr
+        current : ptr
+        len : usz
+
+        fn new usz as
+                dup :. len
+                malloc
+                dup :. start :. current
+        end
+
+        fn destroy as
+                :, start free
+                :& free
+        end
+
+        fn alloc usz -> ptr as
+                param size
+                :, current :, start - :, len size - <= if
+                        null
+                else
+                        :, current
+                        :, current size + :. current
+                end
+        end
+end
+
+fn main -> code as
+        var arena : ptr-to Arena
+        sizeof(Arena) malloc arena :=
+        arena :: new
+        arena :> len dump
+        arena :: 15 alloc
+        arena :: destroy
+        0
+end
