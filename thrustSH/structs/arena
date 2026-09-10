@@ -1,0 +1,6 @@
+struct Arena
+	size int
+	base ptr
+	curr ptr
+	next ptr
+end

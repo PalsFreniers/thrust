@@ -1,0 +1,11 @@
+define todo
+        "[TODO] " stderr write _
+        !?! stderr write _
+        " -> " stderr write _
+end
+
+define error
+        "[ERROR] " stderr write _
+        !?! stderr write _
+        " -> " stderr write _
+end

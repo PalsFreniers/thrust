@@ -1,0 +1,3 @@
+fn testx as
+        "Hello World\n" 1 1 call3 _
+end

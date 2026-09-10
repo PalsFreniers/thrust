@@ -1,0 +1,63 @@
+addin "std"
+addin "lex/loc"
+
+struct Token
+	int // type
+	str // value
+	Loc // loc
+end
+
+const Token:off(type) 0 end
+
+const Token:off(value)
+	sizeof int
+end
+
+const Token:off(loc)
+	sizeof int
+	sizeof str +
+end
+
+define ,Token
+	dup Token:off(type) + ,int <>
+	dup Token:off(value) + ,str <>
+	    Token:off(loc) + ,Loc
+end
+
+define .Token
+	<> <+> Token:off(loc) + .Loc
+	<> <+> Token:off(value) + .str
+	       Token:off(type) + .int
+end
+
+define ,Token:type
+	Token:off(type) + ,int
+end
+
+define .Token:type
+	Token:off(type) + .int
+end
+
+define ,Token:value
+	Token:off(value) + ,str
+end
+
+define .Token:value
+	Token:off(value) + .str
+end
+
+define ,Token:loc
+	Token:off(loc) + ,Loc
+end
+
+define .Token:loc
+	Token:off(loc) + .Loc
+end
+
+fn Token_copy Token -> ptr as
+	alloc tok sizeof ptr end
+	sizeof Token malloc tok .ptr
+	if tok ,ptr null = go ret end
+	tok ,ptr .Token
+	tok ,ptr
+end

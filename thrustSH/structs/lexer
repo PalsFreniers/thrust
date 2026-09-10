@@ -1,0 +1,5 @@
+struct Lexer
+	code str
+	pos int
+	curLoc Loc
+end

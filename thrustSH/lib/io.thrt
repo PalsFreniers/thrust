@@ -1,0 +1,51 @@
+addin "sys/calls"
+
+const STDIN_FD  0 end
+const STDOUT_FD 1 end
+const STDERR_FD 2 end
+
+fn puts int ptr as
+        STDOUT_FD _write _
+end
+
+fn eputs int ptr as
+        STDERR_FD _write _
+end
+
+fn putchar int as
+        alloc c 1 end
+        c .8
+        1 c puts
+end
+
+const PUTD_BUFF_CAP 32 end
+
+fn putu int as
+        alloc buff PUTD_BUFF_CAP end
+        if dup 0 = go
+                "0" puts
+                _ ret
+        end
+        buff PUTD_BUFF_CAP +
+        during <+> 0 > go
+                1 - dup <->
+                dup 10 / <> 10 %
+                <-> <> '0' + <> .8 <>
+        end
+        dup
+        buff PUTD_BUFF_CAP + <> - <> puts
+        _
+end
+
+fn putd int as
+        if dup 0 < go
+                0 <> -
+                "-" puts
+        end
+        putu
+end
+
+fn slurp str -> str as
+        alloc path sizeof str end path .str
+        
+end

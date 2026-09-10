@@ -1,0 +1,23 @@
+addin "sys/types"
+
+const SYS_READ  1  end
+const SYS_WRITE 2  end
+const SYS_OPEN  3  end
+const SYS_CLOSE 4  end
+const SYS_EXIT  60 end
+
+fn sys_read fd ptr size -> size as
+        SYS_READ call3
+end
+
+fn sys_write fd ptr size -> size as
+        SYS_WRITE call3
+end
+
+fn sys_open cstr -> fd as
+        SYS_OPEN call1
+end
+
+fn sys_close fd as
+        SYS_CLOSE call1 _
+end

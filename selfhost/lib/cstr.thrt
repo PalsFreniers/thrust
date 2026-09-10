@@ -1,0 +1,26 @@
+addin "str"
+
+alias ptr as Cstr
+
+fn cstrlen Cstr -> int as
+	alloc s sizeof ptr end s .ptr
+	if s ,64 0 = go
+		0 ret
+	end
+	0 during dup s ,ptr + ,8 0 != go
+		1 +
+	end
+end
+
+define _cstrToStr
+	dup cstrlen <>
+end
+
+fn cstrToStr Cstr -> Str as
+	_cstrToStr
+end
+
+fn strtoCstr Str -> ptr as
+	alloc self sizeof Str end self .Str
+	self ,Str:data 
+end

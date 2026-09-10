@@ -1,0 +1,18 @@
+addin "std"
+
+struct str as
+	data : ptr
+	len : u64
+end
+
+fn hello
+	Msg : str
+as
+	Msg print
+end
+
+fn main -> int as
+	var x : str
+	"Hello World!\n" x .
+	x hello
+end

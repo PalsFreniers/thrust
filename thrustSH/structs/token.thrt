@@ -1,0 +1,61 @@
+struct Token
+	int // type
+	str // value
+	Loc // loc
+end
+
+const sizeof(Token)
+	sizeof(int)
+	sizeof(str) +
+	sizeof(Loc) +
+end
+
+const Token:off(type) 0 end
+
+const Token:off(value)
+	sizeof(int)
+end
+
+const Token:off(loc)
+	sizeof(int)
+	sizeof(str) +
+end
+
+define ,Token
+	dup Token:off(type) + ,int <>
+	dup Token:off(value) + ,str <>
+	dup Token:off(loc) + ,Loc <>
+	_
+end
+
+define .Token
+	<> <+> Token:off(loc) + .Loc
+	<> <+> Token:off(value) + .str
+	<> <+> Token:off(type) + .int
+	_
+end
+
+define ,Token:type
+	Token:off(type) + ,int
+end
+
+define .Token:type
+	Token:off(type) + .int
+end
+
+define ,Token:value
+	Token:off(value) + ,str
+end
+
+define .Token:value
+	Token:off(value) + .str
+end
+
+define ,Token:loc
+	Token:off(loc) + ,Loc
+end
+
+define .Token:loc
+	Token:off(loc) + .Loc
+end
+

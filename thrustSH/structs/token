@@ -1,0 +1,5 @@
+struct Token
+	type int
+	value str
+	loc Loc
+end

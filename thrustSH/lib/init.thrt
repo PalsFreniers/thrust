@@ -1,0 +1,6 @@
+addin "alloc"
+addin "io"
+
+fn init as
+	MAP_DFL_SIZE Arena_new GlobalArenaAllocator .ptr
+end

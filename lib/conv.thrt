@@ -1,0 +1,9 @@
+fn atoi int ptr -> int as
+        alloc a 16 end
+        a <--> str.write() 
+        0
+        0 during dup a str.read(count) < go
+                dup a str.read(data) + ,8 '0' -
+                <-> 10 * + <> ++
+        end _
+end

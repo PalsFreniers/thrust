@@ -1,0 +1,116 @@
+addin "alloc"
+
+struct Node
+	ptr // value
+	ptr // next
+end
+
+const sizeof Node
+	sizeof ptr
+	sizeof ptr +
+end
+
+const Node:off(value) 0 end
+
+const Node:off(next)
+	sizeof ptr
+end
+
+define ,Node
+	dup Node:off(value) + ,ptr <>
+	    Node:off(next) + ,ptr
+end
+
+define .Node
+	<> <+> Node:off(next) + .ptr
+	       Node:off(value) + .ptr
+end
+
+define ,Node:value
+	Node:off(value) + ,ptr
+end
+
+define .Node:value
+	Node:off(value) + .ptr
+end
+
+define ,Node:next
+	Node:off(next) + ,ptr
+end
+
+define .Node:next
+	Node:off(next) + .ptr
+end
+
+fn Node_new ptr -> ptr as
+	
+end
+
+struct List
+	int // size
+	ptr // head
+end
+
+const List:off(size) 0 end
+
+const List:off(head)
+	sizeof int
+end
+
+define ,List
+	dup List:off(size) + ,int <>
+	    List:off(head) + ,ptr
+end
+
+define .List
+	<> <+> List:off(head) + .ptr
+	       List:off(size) + .int
+end
+
+define ,List:size
+	List:off(size) + ,int
+end
+
+define .List:size
+	List:off(size) + .int
+end
+
+define ,List:head
+	List:off(head) + ,ptr
+end
+
+define .List:head
+	List:off(head) + .ptr
+end
+
+fn List_init -> List as
+	0 null
+end
+
+fn List_append ptr ptr as
+	alloc lst   sizeof ptr end lst .ptr
+	alloc n     sizeof ptr end n   .ptr
+	alloc next  sizeof ptr end null next .ptr
+	alloc nextn sizeof ptr end null next .ptr
+
+	if lst ,List:len 0 <= go
+		n ,ptr lst ,ptr .List:head
+		1 lst ,ptr .List:len
+		ret
+	end
+	lst ,ptr ,List:head next .ptr
+	during next ,ptr null != go
+		next .ptr nextn ,ptr
+		next ,ptr ,Node:next next .ptr
+	end
+	n ,ptr nextn ,ptr .Node:next
+	lst ,ptr ,List:len 1 + lst ,ptr .List:len
+end
+
+fn List_pop ptr -> ptr as
+	alloc lst sizeof ptr end lst .ptr
+
+	lst ,ptr ,List:head dup
+	,Node:next lst ,ptr .List:head
+	lst ,ptr ,List:len 1 - lst ,ptr .List:len
+end

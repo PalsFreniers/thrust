@@ -1,0 +1,67 @@
+addin "typ"
+addin "io"
+addin "def"
+
+struct str
+	int // len
+	ptr // data
+end
+
+const str:off(len) 0 end
+
+const str:off(data) sizeof int end
+
+define ,str
+	dup str:off(len) + ,int <>
+	    str:off(data) + ,ptr
+end
+
+define .str
+	<> <+> str:off(data) + .ptr
+	       str:off(len) + .int
+end
+
+define ,str:len
+	str:off(len) + ,int
+end
+
+define .str:len
+	str:off(len) + .int
+end
+
+define ,str:data
+	str:off(data) + ,ptr
+end
+
+define .str:data
+	str:off(data) + .ptr
+end
+
+fn toCstr str -> ptr as
+        alloc self sizeof str end self .str
+        self ,str:len 
+end
+
+fn strSuffix str str -> bool as
+	alloc su  sizeof str end su .str
+	alloc s   sizeof str end s  .str
+	alloc i   sizeof int end 0 i .64
+	alloc tmp sizeof ptr end null tmp .ptr
+
+	if
+		su ,str:len 0 =
+		s ,str:len su ,str:len < &
+	go
+		false ret
+	end
+	s ,str:len su ,str:len - s ,str:data + tmp .ptr
+	during
+		i ,64 su  ,str:len !=
+		i ,64 su  ,str:data + ,8
+		i ,64 tmp ,ptr + ,8 =
+		&
+	go
+		i ,64 1 + i .64
+	end
+	i ,64 su ,str:len =
+end

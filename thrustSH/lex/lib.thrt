@@ -1,0 +1,64 @@
+addin "std"
+addin "lex/loc"
+
+struct Lexer
+	str // code
+	int // pos
+	Loc // curLoc
+end
+
+const Lexer:off(code) 0 end
+
+const Lexer:off(pos)
+	sizeof str
+end
+
+const Lexer:off(curLoc)
+	sizeof str
+	sizeof int +
+end
+
+define ,Lexer
+	dup Lexer:off(code) + ,str <>
+	dup Lexer:off(pos) + ,int <>
+	    Lexer:off(curLoc) + ,Loc
+end
+
+define .Lexer
+	<> <+> Lexer:off(curLoc) + .Loc
+	<> <+> Lexer:off(pos) + .int
+	       Lexer:off(code) + .str
+end
+
+define ,Lexer:code
+	Lexer:off(code) + ,str
+end
+
+define .Lexer:code
+	Lexer:off(code) + .str
+end
+
+define ,Lexer:pos
+	Lexer:off(pos) + ,int
+end
+
+define .Lexer:pos
+	Lexer:off(pos) + .int
+end
+
+define ,Lexer:curLoc
+	Lexer:off(curLoc) + ,Loc
+end
+
+define .Lexer:curLoc
+	Lexer:off(curLoc) + .Loc
+end
+
+fn Lexer_new str -> Lexer as
+	alloc file sizeof str end .str
+	file slurp 
+end
+
+fn Lexer_next Lexer -> Token as
+
+end

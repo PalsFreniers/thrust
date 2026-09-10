@@ -1,0 +1,8 @@
+define .ptr .64 end
+define .int .64 end
+define .bool .8 end
+define ,ptr ,64 @ptr end
+define ,int ,64 @int end
+define ,bool ,8 @bool end
+
+alias int as code

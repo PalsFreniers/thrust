@@ -1,0 +1,44 @@
+struct str
+	int // len
+	ptr // data
+end
+
+const sizeof(str)
+	sizeof(int)
+	sizeof(ptr) +
+end
+
+const str:off(len) 0 end
+
+const str:off(data)
+	sizeof(int)
+end
+
+define ,str
+	dup str:off(len) + ,int <>
+	dup str:off(data) + ,ptr <>
+	_
+end
+
+define .str
+	<> <+> str:off(data) + .ptr
+	<> <+> str:off(len) + .int
+	_
+end
+
+define ,str:len
+	str:off(len) + ,int
+end
+
+define .str:len
+	str:off(len) + .int
+end
+
+define ,str:data
+	str:off(data) + ,ptr
+end
+
+define .str:data
+	str:off(data) + .ptr
+end
+

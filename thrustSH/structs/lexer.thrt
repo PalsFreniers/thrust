@@ -1,0 +1,61 @@
+struct Lexer
+	str // code
+	int // pos
+	Loc // curLoc
+end
+
+const sizeof(Lexer)
+	sizeof(str)
+	sizeof(int) +
+	sizeof(Loc) +
+end
+
+const Lexer:off(code) 0 end
+
+const Lexer:off(pos)
+	sizeof(str)
+end
+
+const Lexer:off(curLoc)
+	sizeof(str)
+	sizeof(int) +
+end
+
+define ,Lexer
+	dup Lexer:off(code) + ,str <>
+	dup Lexer:off(pos) + ,int <>
+	dup Lexer:off(curLoc) + ,Loc <>
+	_
+end
+
+define .Lexer
+	<> <+> Lexer:off(curLoc) + .Loc
+	<> <+> Lexer:off(pos) + .int
+	<> <+> Lexer:off(code) + .str
+	_
+end
+
+define ,Lexer:code
+	Lexer:off(code) + ,str
+end
+
+define .Lexer:code
+	Lexer:off(code) + .str
+end
+
+define ,Lexer:pos
+	Lexer:off(pos) + ,int
+end
+
+define .Lexer:pos
+	Lexer:off(pos) + .int
+end
+
+define ,Lexer:curLoc
+	Lexer:off(curLoc) + ,Loc
+end
+
+define .Lexer:curLoc
+	Lexer:off(curLoc) + .Loc
+end
+

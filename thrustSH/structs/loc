@@ -1,0 +1,5 @@
+struct Loc
+	file str
+	line int
+	col int
+end

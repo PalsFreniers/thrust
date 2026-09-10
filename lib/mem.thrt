@@ -1,0 +1,8 @@
+// map flags
+const MAP_PRIVATE 2 end
+
+// map protection
+const PROT_READ 1 end
+
+// "funcs"
+

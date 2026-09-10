@@ -1,0 +1,31 @@
+addin "std"
+addin "lexer"
+
+fn usage code str str as
+	alloc msg 8 end msg .ptr
+	alloc msg_len 8 end msg_len .64
+	alloc prog 8 end prog .ptr
+	alloc prog_len 8 end prog_len .64
+	"USAGE: " eputs
+	prog_len ,64 prog ,ptr eputs
+	" <file.thrt>\n" eputs
+	if msg_len ,64 0 != go
+		"[ERROR] => " eputs
+		msg_len ,64 msg ,ptr eputs
+		"\n" eputs
+	end
+	exit
+end
+
+define THRUST_EXT ".thrt" end
+define Program #v ,ptr cstrToStr end
+
+fn main -> code as
+	if #c 2 < go
+		1 Program "No input files" usage
+	end
+	if 1 #nvS THRUST_EXT strSuffix ! go
+		2 Program "Source sile should have the extension `.thrt`" usage
+	end
+	0
+end

@@ -1,0 +1,9 @@
+addin "typ"
+addin "cstr"
+
+define #nv sizeof ptr * #v + ,ptr end
+define #nvS sizeof ptr * #v + ,ptr _cstrToStr end
+define __ _ _ end
+define KB 1000 * end
+define MB KB 1000 * end
+define GB MB 1000 * end

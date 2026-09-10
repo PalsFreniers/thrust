@@ -1,0 +1,79 @@
+struct Arena
+	int // size
+	ptr // base
+	ptr // curr
+	ptr // next
+end
+
+const sizeof(Arena)
+	sizeof(int)
+	sizeof(ptr) +
+	sizeof(ptr) +
+	sizeof(ptr) +
+end
+
+const Arena:off(size) 0 end
+
+const Arena:off(base)
+	sizeof(int)
+end
+
+const Arena:off(curr)
+	sizeof(int)
+	sizeof(ptr) +
+end
+
+const Arena:off(next)
+	sizeof(int)
+	sizeof(ptr) +
+	sizeof(ptr) +
+end
+
+define ,Arena
+	dup Arena:off(size) + ,int <>
+	dup Arena:off(base) + ,ptr <>
+	dup Arena:off(curr) + ,ptr <>
+	dup Arena:off(next) + ,ptr <>
+	_
+end
+
+define .Arena
+	<> <+> Arena:off(next) + .ptr
+	<> <+> Arena:off(curr) + .ptr
+	<> <+> Arena:off(base) + .ptr
+	<> <+> Arena:off(size) + .int
+	_
+end
+
+define ,Arena:size
+	Arena:off(size) + ,int
+end
+
+define .Arena:size
+	Arena:off(size) + .int
+end
+
+define ,Arena:base
+	Arena:off(base) + ,ptr
+end
+
+define .Arena:base
+	Arena:off(base) + .ptr
+end
+
+define ,Arena:curr
+	Arena:off(curr) + ,ptr
+end
+
+define .Arena:curr
+	Arena:off(curr) + .ptr
+end
+
+define ,Arena:next
+	Arena:off(next) + ,ptr
+end
+
+define .Arena:next
+	Arena:off(next) + .ptr
+end
+

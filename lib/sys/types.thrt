@@ -1,0 +1,14 @@
+const stat.dev 8 offset end
+const stat.ino 8 offset end
+const stat.nlink 8 offset end
+const stat.mode 4 offset end
+const stat.uid 4 offset end
+const stat.gid 4 offset end
+const stat.rdev 8 offset end
+const stat.size 8 offset end
+const stat.blksize 8 offset end
+const stat.blocks 8 offset end
+const stat.atim 16 offset end
+const stat.mtim 16 offset end
+const stat.ctim 16 offset end
+const sizeof(stat) reset end

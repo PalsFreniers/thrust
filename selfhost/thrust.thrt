@@ -1,0 +1,14 @@
+addin "std"
+addin "str"
+addin "io"
+
+fn main -> code as
+	alloc s sizeof Str end
+	"  \t      \n   " strtrim s .Str
+	if s ,Str:len 0 = go
+		"len is 0\n" puts
+	else
+		"|" puts s ,Str puts "|\n" puts
+	end
+	SUCCESS
+end

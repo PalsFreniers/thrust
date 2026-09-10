@@ -1,0 +1,47 @@
+// stdio file descriptor
+const stdin  0 end
+const stdout 1 end
+const stderr 2 end
+
+// exit codes
+const EXIT_SUCCESS 0 end
+const EXIT_FAILURE 1 end
+
+// file open flags
+const O_RDONLY 0 end
+const O_WRONLY 1 end
+const O_RDWR   2 end
+
+const AT_FDCWD -100 end
+
+const sizeof(fd) 8 end
+
+fn gets int ptr -> int as
+        stdin read
+end
+
+fn puts int ptr as
+        stdout write _
+end
+
+fn eputs int ptr as
+        stderr write _
+end
+
+const PUTD_BUFF_CAP 32 end
+
+fn putd int as
+        alloc buff sizeof(u8) PUTD_BUFF_CAP * end
+        if dup 0 = go
+                "0" puts
+        else
+                buff PUTD_BUFF_CAP +
+                during <+> 0 > go
+                        1 - dup <->
+                        dup 10 / <> 10 %
+                        <-> <> '0' + <> .8 <>
+                end
+                dup
+                buff PUTD_BUFF_CAP + <> - <> puts
+        end _
+end

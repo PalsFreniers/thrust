@@ -1,0 +1,11 @@
+define KB 1000 * end
+define MB KB 1000 * end
+define GB MB 1000 * end
+
+define KiB 1024 * end
+define MiB KB 1024 * end
+define GiB MB 1024 * end
+
+const SUCCESS 0 end
+const FAIL 1 end
+const ERROR -1 end

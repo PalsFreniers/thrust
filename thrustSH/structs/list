@@ -1,0 +1,4 @@
+struct List
+	size int
+	head ptr
+end

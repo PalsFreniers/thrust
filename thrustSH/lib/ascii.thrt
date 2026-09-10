@@ -1,0 +1,9 @@
+addin "io"
+
+fn isAscii int -> bool as
+	dup 0 >= <> 127 <= &
+end
+
+fn isSpace int -> bool as
+	dup '\t' >= <> dup '\r' <= <-> & <> ' ' = |
+end

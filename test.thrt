@@ -1,0 +1,6 @@
+fn main -> int as
+        0 during dup 15 > go
+                dump
+        end
+        0
+end

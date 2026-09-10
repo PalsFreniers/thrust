@@ -1,0 +1,58 @@
+addin "std"
+
+struct Loc
+	str // file
+	int // line
+	int // col
+end
+
+const Loc:off(file) 0 end
+
+const Loc:off(line)
+	sizeof str
+end
+
+const Loc:off(col)
+	sizeof str
+	sizeof int +
+end
+
+define ,Loc
+	dup Loc:off(file) + ,str <>
+	dup Loc:off(line) + ,int <>
+	    Loc:off(col) + ,int
+end
+
+define .Loc
+	<> <+> Loc:off(col) + .int
+	<> <+> Loc:off(line) + .int
+	       Loc:off(file) + .str
+end
+
+define ,Loc:file
+	Loc:off(file) + ,str
+end
+
+define .Loc:file
+	Loc:off(file) + .str
+end
+
+define ,Loc:line
+	Loc:off(line) + ,int
+end
+
+define .Loc:line
+	Loc:off(line) + .int
+end
+
+define ,Loc:col
+	Loc:off(col) + ,int
+end
+
+define .Loc:col
+	Loc:off(col) + .int
+end
+
+fn Loc_new str -> Loc as
+	1 1
+end

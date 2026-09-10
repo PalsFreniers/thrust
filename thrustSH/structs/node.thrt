@@ -1,0 +1,44 @@
+struct Node
+	ptr // value
+	ptr // next
+end
+
+const sizeof(Node)
+	sizeof(ptr)
+	sizeof(ptr) +
+end
+
+const Node:off(value) 0 end
+
+const Node:off(next)
+	sizeof(ptr)
+end
+
+define ,Node
+	dup Node:off(value) + ,ptr <>
+	dup Node:off(next) + ,ptr <>
+	_
+end
+
+define .Node
+	<> <+> Node:off(next) + .ptr
+	<> <+> Node:off(value) + .ptr
+	_
+end
+
+define ,Node:value
+	Node:off(value) + ,ptr
+end
+
+define .Node:value
+	Node:off(value) + .ptr
+end
+
+define ,Node:next
+	Node:off(next) + ,ptr
+end
+
+define .Node:next
+	Node:off(next) + .ptr
+end
+

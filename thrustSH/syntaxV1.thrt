@@ -1,0 +1,19 @@
+addin "std"
+
+struct str
+	int
+	ptr
+end
+
+fn hello str as
+	alloc Msg 16 end
+	Msg .64 Msg 8 + .64
+	Msg print
+end
+
+fn main -> int as
+	alloc x 16 end
+	"Hello World!\n" x .64 x 8 + .64
+	x 8 + ,64 x ,64 hello
+	0
+end

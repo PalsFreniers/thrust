@@ -1,0 +1,4 @@
+struct str
+	len  int
+	data ptr
+end

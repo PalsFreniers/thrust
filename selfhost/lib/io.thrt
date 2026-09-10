@@ -1,0 +1,18 @@
+addin "sys"
+addin "str"
+
+const STDIN_FD 0 end
+const STDOUT_FD 1 end
+const STDERR_FD 2 end
+
+fn puts Str as
+	STDOUT_FD write _
+end
+
+fn eputs Str as
+	STDERR_FD write _
+end
+
+fn gets int ptr as
+	STDIN_FD read _
+end

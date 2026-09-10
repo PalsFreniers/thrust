@@ -1,0 +1,10 @@
+addin "typ"
+
+fn isrange int int int -> bool as
+	alloc len sizeof int end len .int
+	- len ,int <
+end
+
+define isspace
+	dup 9 5 isrange <> 32 = |
+end

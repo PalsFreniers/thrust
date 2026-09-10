@@ -1,0 +1,8 @@
+addin "io"
+addin "typ"
+addin "cstr"
+addin "str"
+addin "def"
+addin "init"
+addin "alloc"
+addin "ascii"

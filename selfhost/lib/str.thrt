@@ -1,0 +1,99 @@
+addin "ascii"
+
+struct Str
+	int // len
+	ptr // data
+end
+
+const Str:off(len) 0 end
+
+const Str:off(data) sizeof int end
+
+define ,Str
+	dup Str:off(len) + ,int <>
+	    Str:off(data) + ,ptr
+end
+
+define .Str
+	<> <+> Str:off(data) + .ptr
+	       Str:off(len) + .int
+end
+
+define ,Str:len
+	Str:off(len) + ,int
+end
+
+define .Str:len
+	Str:off(len) + .int
+end
+
+define ,Str:data
+	Str:off(data) + ,ptr
+end
+
+define .Str:data
+	Str:off(data) + .ptr
+end
+
+fn strSuffix Str Str -> bool as
+	alloc su  sizeof Str end su .Str
+	alloc s   sizeof Str end s  .Str
+	alloc i   sizeof int end 0 i .64
+	alloc tmp sizeof ptr end null tmp .ptr
+
+	if
+		su ,Str:len 0 =
+		s ,Str:len su ,Str:len < &
+	go
+		false ret
+	end
+	s ,Str:len su ,Str:len - s ,Str:data + tmp .ptr
+	during
+		i ,64 su  ,Str:len !=
+		i ,64 su  ,Str:data + ,8
+		i ,64 tmp ,ptr + ,8 =
+		&
+	go
+		i ,64 1 + i .64
+	end
+	i ,64 su ,Str:len =
+end
+
+fn strtrimLeft Str -> Str as
+	alloc s sizeof Str end s .Str
+	0 during dup s ,Str:len < <+> s ,Str:data + ,8 isspace & go
+		1 +
+	end
+	if dup 0 = go
+		_ s ,Str
+		ret
+	elif dup s ,Str:len = go
+		_ 0 0 @ptr
+		ret
+	end
+	dup s ,Str:len <> - s .Str:len
+	s ,Str:data + s .Str:data
+	s ,Str
+end
+
+fn strtrimRight Str -> Str as
+	alloc s sizeof Str end s .Str
+	s ,Str:len 1 - during dup 0 >= <+> s ,Str:data + ,8 isspace & go
+		1 -
+	end
+	if dup 0 = go
+		_ 0 0 @ptr
+		ret
+	elif dup s ,Str:len = go
+		_ s ,Str
+		ret
+	end
+	1 + s .Str:len
+	s ,Str
+end
+
+fn strtrim Str -> Str as
+	strtrimLeft strtrimRight
+end
+
+

@@ -1,0 +1,6 @@
+addin "sys/types"
+
+extern sys_read  fd ptr isz -> isz end
+extern sys_write fd ptr isz -> isz end
+extern sys_open  cstr -> fd end
+extern sys_close fd end

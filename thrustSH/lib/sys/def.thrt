@@ -1,0 +1,30 @@
+addin "def"
+
+const PROT_EXEC  4 end
+const PROT_READ  1 end
+const PROT_WRITE 2 end
+const PROT_NONE  0 end
+
+const MAP_SHARED          1 end
+const MAP_SHARED_VALIDATE 3 end
+const MAP_PRIVATE         2 end
+const MAP_32BIT           64 end
+const MAP_ANON            32 end
+const MAP_ANONYMOUS       32 end
+const MAP_DENYWRITE       2048 end
+const MAP_EXECUTABLE      4096 end
+const MAP_FILE            0 end
+const MAP_FIXED           16 end
+const MAP_FIXED_NOREPLACE 1048576 end
+const MAP_GROWSDOWN       256 end
+const MAP_HUGETLB         262144 end
+const MAP_HUGE2MB         1409286144 end
+const MAP_HUGE1GB         2013265920 end
+const MAP_LOCKED          8192 end
+const MAP_NONBLOCK        65536 end
+const MAP_NORESERVE       16384 end
+const MAP_POPULATE        32768 end
+const MAP_STACK           131072 end
+const MAP_SYNC            524288 end
+
+const MAP_DFL_SIZE 4 KB end

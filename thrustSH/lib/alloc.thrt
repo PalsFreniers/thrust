@@ -1,0 +1,134 @@
+addin "sys/def"
+
+struct Arena
+	int // size
+	ptr // base
+	ptr // curr
+	ptr // next
+end
+
+const sizeof Arena
+	sizeof int
+	sizeof ptr +
+	sizeof ptr +
+	sizeof ptr +
+end
+
+const Arena:off(size) 0 end
+
+const Arena:off(base)
+	sizeof int
+end
+
+const Arena:off(curr)
+	sizeof int
+	sizeof ptr +
+end
+
+const Arena:off(next)
+	sizeof int
+	sizeof ptr +
+	sizeof ptr +
+end
+
+define ,Arena
+	dup Arena:off(size) + ,int <>
+	dup Arena:off(base) + ,ptr <>
+	dup Arena:off(curr) + ,ptr <>
+	    Arena:off(next) + ,ptr
+end
+
+define .Arena
+	<> <+> Arena:off(next) + .ptr
+	<> <+> Arena:off(curr) + .ptr
+	<> <+> Arena:off(base) + .ptr
+	       Arena:off(size) + .int
+end
+
+define ,Arena:size
+	Arena:off(size) + ,int
+end
+
+define .Arena:size
+	Arena:off(size) + .int
+end
+
+define ,Arena:base
+	Arena:off(base) + ,ptr
+end
+
+define .Arena:base
+	Arena:off(base) + .ptr
+end
+
+define ,Arena:curr
+	Arena:off(curr) + ,ptr
+end
+
+define .Arena:curr
+	Arena:off(curr) + .ptr
+end
+
+define ,Arena:next
+	Arena:off(next) + ,ptr
+end
+
+define .Arena:next
+	Arena:off(next) + .ptr
+end
+
+fn Arena_new int -> ptr as
+	alloc r sizeof ptr end
+	alloc arena sizeof Arena end
+
+	null null null arena .Arena
+	0 -1 MAP_ANON MAP_PRIVATE | PROT_READ PROT_WRITE | arena ,Arena:size sizeof Arena + null _mmap r .ptr
+	if r ,ptr null = go null ret end
+	r ,ptr sizeof Arena + dup arena .Arena:base arena .Arena:curr
+	arena ,Arena r ,ptr .Arena 
+	r ,ptr
+end
+
+fn Arena_zero -> Arena as
+	0 null null null
+end
+
+fn Arena_free ptr as
+	alloc self sizeof ptr end self .ptr
+	
+	if self ,ptr null = go
+		ret
+	end
+	if self ,ptr ,Arena:size 0 <= go
+		ret
+	end
+	self ,ptr ,Arena:next Arena_free
+	self ,ptr dup ,Arena:size sizeof(Arena) + <> ,Arena:base sizeof(Arena) - _munmap
+end
+
+fn Arena_alloc int ptr -> ptr as
+	alloc self sizeof ptr end self .ptr
+	alloc size sizeof int end size .64
+	alloc newSize sizeof int end self ,ptr ,Arena:size newSize .64
+
+	if self ,ptr null = go
+		null ret
+	end
+	if
+		self ,ptr ,Arena:curr size ,64 +
+		self ,ptr ,Arena:base -
+		size ,64 <
+	go
+		if self ,ptr ,Arena:size size ,64 <= go
+			size ,64 1 + newSize .64
+		end
+		newSize ,64 Arena_new self .ptr
+	end
+	self ,ptr ,Arena:curr dup size ,64 + self ,ptr .Arena:curr
+end
+
+alloc GlobalArenaAllocator sizeof ptr end
+
+fn malloc int -> ptr as
+	GlobalArenaAllocator ,ptr Arena_alloc
+end

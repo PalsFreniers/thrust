@@ -1,0 +1,44 @@
+struct List
+	int // size
+	ptr // head
+end
+
+const sizeof(List)
+	sizeof(int)
+	sizeof(ptr) +
+end
+
+const List:off(size) 0 end
+
+const List:off(head)
+	sizeof(int)
+end
+
+define ,List
+	dup List:off(size) + ,int <>
+	dup List:off(head) + ,ptr <>
+	_
+end
+
+define .List
+	<> <+> List:off(head) + .ptr
+	<> <+> List:off(size) + .int
+	_
+end
+
+define ,List:size
+	List:off(size) + ,int
+end
+
+define .List:size
+	List:off(size) + .int
+end
+
+define ,List:head
+	List:off(head) + ,ptr
+end
+
+define .List:head
+	List:off(head) + .ptr
+end
+
