@@ -914,6 +914,7 @@ def generate_nasm_linux_x86_64(program: Program, out_file_path: str, extern: Lis
         for ip in range(len(program.ops)):
             op = program.ops[ip]
             assert len(OpType) == 18, "Exhaustive ops handling in generate_nasm_linux_x86_64"
+            out.write("%%line %d+0 %s\n" % (op.token.loc[1], op.token.loc[0]))
             if op.typ == OpType.PUSH_INT:
                 assert isinstance(op.operand, int), "This could be a bug in the parsing step"
                 out.write("    ;; -- push int %d --\n" % op.operand)
@@ -2466,7 +2467,7 @@ if __name__ == '__main__' and '__file__' in globals():
         if not silent:
             print("[INFO] Generating %s" % (basepath + ".asm"))
         generate_nasm_linux_x86_64(program, basepath + ".asm", [names for names in externs.keys()])
-        cmd_call_echoed(["nasm", "-felf64", basepath + ".asm"], silent)
+        cmd_call_echoed(["nasm", "-felf64", "-g", "-F", "dwarf", basepath + ".asm"], silent)
         if not Library:
             cmd_call_echoed(["ld", "-o", basepath, basepath + ".o"] + linkArgs, silent)
         else:

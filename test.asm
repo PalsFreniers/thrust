@@ -1,7 +1,5 @@
 BITS 64
 segment .text
-extern thrust_malloc
-extern thrust_free
 global print
 print:
     mov     r9, -3689348814741910323
@@ -49,37 +47,46 @@ _start:
     pop qword rdi
     mov rax, 60
     syscall
+%line 1+0 test.thrt
     ;; -- func --
 global main
 main:
+%line 1+0 test.thrt
     ;; -- stack prep --
     mov [ret_stack_rsp], rsp
     mov rsp, rax
+%line 2+0 test.thrt
+    ;; -- push int 1 --
+    mov rax, 1
+    push rax
+%line 2+0 test.thrt
+    ;; -- push int 1 --
+    mov rax, 1
+    push rax
+%line 2+0 test.thrt
+    ;; -- plus --
+    pop rax
+    pop rbx
+    add rax, rbx
+    push rax
+%line 3+0 test.thrt
     ;; -- push int 15 --
     mov rax, 15
     push rax
-    ;; -- call --
-    mov rax, rsp
-    mov rsp, [ret_stack_rsp]
-    call thrust_malloc
-    mov [ret_stack_rsp], rsp
-    mov rsp, rax
-    ;; -- dup --
+%line 3+0 test.thrt
+    ;; -- mul --
     pop rax
+    pop rbx
+    mul rbx
     push rax
-    push rax
-    ;; -- print --
-    pop rdi
-    call print
-    ;; -- call --
-    mov rax, rsp
-    mov rsp, [ret_stack_rsp]
-    call thrust_free
-    mov [ret_stack_rsp], rsp
-    mov rsp, rax
+%line 3+0 test.thrt
+    ;; -- drop --
+    pop rax
+%line 4+0 test.thrt
     ;; -- push int 0 --
     mov rax, 0
     push rax
+%line 5+0 test.thrt
     ;; -- return --
     mov rax, rsp
     mov rsp, [ret_stack_rsp]

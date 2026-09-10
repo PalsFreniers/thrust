@@ -1,10 +1,5 @@
-extern thrust_malloc int -> ptr end
-extern thrust_free ptr end
-
-define malloc thrust_malloc end
-define free thrust_free end
-
 fn main -> int as
-        15 malloc dup dump free
-        0
+	1 1 +
+	15 * _
+	0
 end
