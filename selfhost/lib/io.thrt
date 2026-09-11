@@ -1,0 +1,6 @@
+addin "str"
+
+alias ptr as file
+
+fn fopen str str -> file as
+end

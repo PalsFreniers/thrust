@@ -44,6 +44,8 @@ class Keyword(Enum):
     RETURN=auto()
     EXTERN=auto()
     STRUCT=auto()
+    ALIAS=auto()
+    OFFSETOF=auto()
 
 class DataType(IntEnum):
     INT=auto()
@@ -864,6 +866,7 @@ def generate_nasm_linux_x86_64(program: Program, out_file_path: str, extern: Lis
         if not Library:
             for n in extern:
                 out.write("extern %s\n" % n)
+            out.write("%line 0+0 <internal>\n")
             out.write("global print\n")
             out.write("print:\n")
             out.write("    mov     r9, -3689348814741910323\n")
@@ -914,7 +917,7 @@ def generate_nasm_linux_x86_64(program: Program, out_file_path: str, extern: Lis
         for ip in range(len(program.ops)):
             op = program.ops[ip]
             assert len(OpType) == 18, "Exhaustive ops handling in generate_nasm_linux_x86_64"
-            out.write("%%line %d+0 %s\n" % (op.token.loc[1], op.token.loc[0]))
+            out.write("%%line %d+0 %s\n" % (op.token.loc[1], os.path.abspath(op.token.loc[0])))
             if op.typ == OpType.PUSH_INT:
                 assert isinstance(op.operand, int), "This could be a bug in the parsing step"
                 out.write("    ;; -- push int %d --\n" % op.operand)
@@ -1351,7 +1354,7 @@ def generate_nasm_linux_x86_64(program: Program, out_file_path: str, extern: Lis
         if program.memCapacity > 0:
             out.write("mem: resb %d\n" % program.memCapacity)
 
-assert len(Keyword) == 21, "Exhaustive KEYWORD_NAMES definition."
+assert len(Keyword) == 23, "Exhaustive KEYWORD_NAMES definition."
 KEYWORD_NAMES = {
     'if': Keyword.IF,
     'elif': Keyword.ELIF,
@@ -1374,6 +1377,8 @@ KEYWORD_NAMES = {
     '->': Keyword.RETURN,
     'extern': Keyword.EXTERN,
     'struct': Keyword.STRUCT,
+    'alias': Keyword.ALIAS,
+    'offsetof': Keyword.OFFSETOF,
 }
 
 assert len(DataType) == 3, "Exhaustive DATATYPES definition"
@@ -1381,6 +1386,13 @@ DATATYPES = {
     'int': DataType.INT,
     'ptr': DataType.PTR,
     'bool': DataType.BOOL,
+}
+
+assert len(DataType) == 3, "Exhaustive DATATYPES definition"
+DATATYPES_SIZE = {
+        DataType.INT: 8,
+        DataType.PTR: 8,
+        DataType.BOOL: 1,
 }
 
 assert len(Intrinsic) == 48, "Exhaustive INTRINSIC_BY_NAMES definition"
@@ -1467,7 +1479,7 @@ class Const:
 class Struct:
     loc: Loc
     name: str
-    types: List[DataType]
+    types: List[Tuple[str, DataType]]
 
 def check_valid_symbol(token: Token, name: str, macros: Dict[str, Macro], functions: Dict[str, Function], memories: Dict[str, Memory], consts: Dict[str, Const], structs):
     if name in macros:
@@ -1529,7 +1541,99 @@ def eval_expression(rtokens: List[Token], macros: Dict[str, Macro], consts: Dict
         elif token.typ == TokenType.WORD:
             assert isinstance(token.value, str), "lexer bug"
             if token.value in INTRINSIC_BY_NAMES:
-                if token.value == INTRINSIC_NAMES[Intrinsic.PLUS]:
+                if token.value == INTRINSIC_NAMES[Intrinsic.SHL]:
+                    if len(stack) < 2:
+                        compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                        exit(1)
+                    a, a_t = stack.pop()
+                    b, b_t = stack.pop()
+                    if a_t == b_t and a_t == DataType.INT:
+                        stack.append((b << a, DataType.INT))
+                    else:
+                        compiler_error_with_expansion_stack(token, f"Invalid argument types for `{token.value}` intrinsic: {(a_t, b_t)}")
+                        compiler_note(token.loc, f"Expected:")
+                        compiler_note(token.loc, f"  {(DataType.INT, DataType.INT)}")
+                        exit(1)
+                elif token.value == INTRINSIC_NAMES[Intrinsic.SHR]:
+                    if len(stack) < 2:
+                        compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                        exit(1)
+                    a, a_t = stack.pop()
+                    b, b_t = stack.pop()
+                    if a_t == b_t and a_t == DataType.INT:
+                        stack.append((b >> a, DataType.INT))
+                    else:
+                        compiler_error_with_expansion_stack(token, f"Invalid argument types for `{token.value}` intrinsic: {(a_t, b_t)}")
+                        compiler_note(token.loc, f"Expected:")
+                        compiler_note(token.loc, f"  {(DataType.INT, DataType.INT)}")
+                        exit(1)
+                elif token.value == INTRINSIC_NAMES[Intrinsic.OR]:
+                    if len(stack) < 2:
+                        compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                        exit(1)
+                    a, a_t = stack.pop()
+                    b, b_t = stack.pop()
+                    if a_t == b_t and a_t == DataType.INT:
+                        stack.append((b | a, DataType.INT))
+                    elif a_t == b_t and a_t == DataType.BOOL:
+                        stack.append((int(a or b), DataType.BOOL))
+                    else:
+                        compiler_error_with_expansion_stack(token, f"Invalid argument types for or`{token.value}` intrinsic: {(a_t, b_t)}")
+                        compiler_note(token.loc, f"Expected:")
+                        compiler_note(token.loc, f"  {(DataType.INT, DataType.INT)}")
+                        compiler_note(token.loc, f"  {(DataType.BOOL, DataType.BOOL)}")
+                        exit(1)
+                elif token.value == INTRINSIC_NAMES[Intrinsic.AND]:
+                    if len(stack) < 2:
+                        compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                        exit(1)
+                    a, a_t = stack.pop()
+                    b, b_t = stack.pop()
+                    if a_t == b_t and a_t == DataType.INT:
+                        stack.append((b & a, DataType.INT))
+                    elif a_t == b_t and a_t == DataType.BOOL:
+                        stack.append((int(a and b), DataType.BOOL))
+                    else:
+                        compiler_error_with_expansion_stack(token, f"Invalid argument types for `{token.value}` intrinsic: {(a_t, b_t)}")
+                        compiler_note(token.loc, f"Expected:")
+                        compiler_note(token.loc, f"  {(DataType.INT, DataType.INT)}")
+                        compiler_note(token.loc, f"  {(DataType.BOOL, DataType.BOOL)}")
+                        exit(1)
+                elif token.value == INTRINSIC_NAMES[Intrinsic.XOR]:
+                    if len(stack) < 2:
+                        compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                        exit(1)
+                    a, a_t = stack.pop()
+                    b, b_t = stack.pop()
+                    if a_t == b_t and a_t == DataType.INT:
+                        stack.append((b ^ a, DataType.INT))
+                    elif a_t == b_t and a_t == DataType.BOOL:
+                        stack.append((int(a or b and (not a and b)), DataType.BOOL))
+                    else:
+                        compiler_error_with_expansion_stack(token, f"Invalid argument types for `{token.value}` intrinsic: {(a_t, b_t)}")
+                        compiler_note(token.loc, f"Expected:")
+                        compiler_note(token.loc, f"  {(DataType.INT, DataType.INT)}")
+                        compiler_note(token.loc, f"  {(DataType.BOOL, DataType.BOOL)}")
+                        exit(1)
+                elif token.value == INTRINSIC_NAMES[Intrinsic.NOT]:
+                    if len(stack) < 1:
+                        compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                        exit(1)
+                    a, a_t = stack.pop()
+                    if a_t == DataType.INT:
+                        stack.append((((1 << 31) - 1) ^ a, DataType.INT))
+                    elif a_t == DataType.BOOL:
+                        stack.append((int(not a), DataType.BOOL))
+                    else:
+                        compiler_error_with_expansion_stack(token, f"Invalid argument types for `{token.value}` intrinsic: {a_t}")
+                        compiler_note(token.loc, f"Expected:")
+                        compiler_note(token.loc, f"  {DataType.INT}")
+                        compiler_note(token.loc, f"  {DataType.BOOL}")
+                        exit(1)
+                elif token.value == INTRINSIC_NAMES[Intrinsic.PLUS]:
+                    if len(stack) < 2:
+                        compiler_error_with_expansion_stack(token, f"not enough arguments for `{token.value}` intrinsic")
+                        exit(1)
                     a, a_t = stack.pop()
                     b, b_t = stack.pop()
                     if a_t == DataType.INT and b_t == DataType.INT:
@@ -1757,9 +1861,9 @@ def parse_function_signature(rtokens: List[Token], structs: Dict[str, Struct], l
                     signature.outs.append(DATATYPES[tok.value])
             elif tok.value in structs:
                 if isIn:
-                    signature.ins += structs[tok.value].types
+                    signature.ins += [t for _, t in structs[tok.value].types]
                 else:
-                    signature.outs += structs[tok.value].types
+                    signature.outs += [t for _, t in structs[tok.value].types]
             else:
                 compiler_error_with_expansion_stack(tok, f"Unexpected word {tok.value} in function signature")
                 exit(1)
@@ -1850,7 +1954,7 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
             program.ops.append(Op(typ=OpType.PUSH_INT, operand=token.value, token=token));
             ip += 1
         elif token.typ == TokenType.KEYWORD:
-            assert len(Keyword) == 21, "Exhaustive keywords handling in parse_program_from_tokens()"
+            assert len(Keyword) == 23, "Exhaustive keywords handling in parse_program_from_tokens()"
             if token.value == Keyword.TRUE:
                 program.ops.append(Op(typ=OpType.PUSH_BOOL, operand=True, token=token))
                 ip += 1
@@ -1964,22 +2068,68 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                     exit(1)
                 assert isinstance(token.value, str), "This is probably a bug in the lexer"
                 file_included = False
+                dirPathComponents = (token.loc[0] + PORTH_EXT).split('/')[:-1]
+                if dirPathComponents is None or dirPathComponents == []:
+                    dirPathComponents = ["."]
+                dirPath = '/'.join(dirPathComponents) + '/'
                 for include_path in include_paths:
                     try:
                         if token.expanded_count >= expansion_limit:
                             compiler_error_with_expansion_stack(token, "the include exceeded the expansion limit (it expanded %d times)" % token.expanded_count)
                             exit(1)
-                        tmp = reversed(lex_file(path.join(include_path, token.value + PORTH_EXT), token))
-                        if not path.join(include_path, token.value + PORTH_EXT) in includes:
+                        file = path.join(include_path, token.value + PORTH_EXT)
+                        if token.value[0] == '.':
+                            file = path.join(dirPath, token.value + PORTH_EXT)
+                        file = os.path.normpath(file)
+                        tmp = reversed(lex_file(file, token))
+                        if not file in includes:
                             rtokens += tmp
-                            includes.append(path.join(include_path, token.value + PORTH_EXT))
+                            includes.append(file)
                         file_included = True
                         break
                     except FileNotFoundError:
+                        if token.value[0] == '.':
+                            break
                         continue
                 if not file_included:
                     compiler_error_with_expansion_stack(token, "file `%s` not found" % (token.value + PORTH_EXT))
                     exit(1)
+            elif token.value == Keyword.ALIAS:
+                if len(rtokens) == 0:
+                    compiler_error_with_expansion_stack(token, "expected alias type but found nothing")
+                    exit(1)
+                token = rtokens.pop()
+                if token.typ != TokenType.WORD:
+                    compiler_error_with_expansion_stack(token, "expected alias type to be %s but found %s" % (human(TokenType.WORD), human(token.typ)))
+                    exit(1)
+                assert isinstance(token.value, str), "This is probably a bug in the lexer"
+                struct_member = []
+                if token.value in structs:
+                    struct_member = structs[token.value].types
+                elif token.value in DATATYPES:
+                    struct_member = [('<base_type>', DATATYPES[token.value])]
+                else:
+                    compiler_error_with_expansion_stack(token, "unknown type `%s`" % (token.value))
+                    exit(1)
+                if len(rtokens) == 0:
+                    compiler_error_with_expansion_stack(token, "expected as keyword but found nothing")
+                    exit(1)
+                token = rtokens.pop()
+                if token.typ != TokenType.KEYWORD and token.value != Keyword.AS:
+                    compiler_error_with_expansion_stack(token, "expected as keyword but found %s" % (token.value))
+                    exit(1)
+                if len(rtokens) == 0:
+                    compiler_error_with_expansion_stack(token, "expected alias name but found nothing")
+                    exit(1)
+                token = rtokens.pop()
+                if token.typ != TokenType.WORD:
+                    compiler_error_with_expansion_stack(token, "expected alias name to be %s but found %s" % (human(TokenType.WORD), human(token.typ)))
+                    exit(1)
+                assert isinstance(token.value, str), "This is probably a bug in the lexer"
+                check_valid_symbol(token, token.value, macros, functions, memories, consts, structs)
+                struct_name = token.value
+                struct_loc = token.loc
+                structs[struct_name] = Struct(struct_loc, struct_name, struct_member)
             elif token.value == Keyword.STRUCT:
                 if len(rtokens) == 0:
                     compiler_error_with_expansion_stack(token, "expected struct name but found nothing")
@@ -2001,15 +2151,54 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                         compiler_error_with_expansion_stack(token, "expected struct member type to be %s but found %s" % (human(TokenType.WORD), human(token.typ)))
                         exit(1)
                     assert isinstance(token.value, str), "This is probably a bug in the lexer"
-                    if not token.value in DATATYPES:
-                        compiler_error_with_expansion_stack(token, "expected struct member value to be a type")
+                    member_type = token
+                    token = rtokens.pop()
+                    if token.typ != TokenType.WORD:
+                        compiler_error_with_expansion_stack(token, "expected struct member name to be %s but found %s" % (human(TokenType.WORD), human(token.typ)))
                         exit(1)
-                    member_type = DATATYPES[token.value]
-                    struct_member.append(member_type)
+                    assert isinstance(token.value, str), "This is probably a bug in the lexer"
+                    if any(token.value == n for n, _ in struct_member):
+                        compiler_error_with_expansion_stack(token, "member name %s already exist in struct" % (token.value))
+                        exit(1)
+                    if member_type.value in DATATYPES:
+                        struct_member.append((token.value, DATATYPES[member_type.value]))
+                    elif member_type.value in structs:
+                        if len(structs[struct_member.value].types) <= 1 and structs[struct_member.value].types[0][0] == '<base_type>':
+                            struct_member.append((token.value, structs[member_type.value].types[0][1]))
+                        else:
+                            struct_member = struct_member + [(token.value + '.' + n, t) for n, t in struct[member_type.value].types]
+                    else:
+                        compiler_error_with_expansion_stack(member_type, "unknown type name %s" % member_type.value)
                 if len(struct_member) == 0:
                     compiler_error_with_expansion_stack(struct_loc, "cannot create empty structure")
                     exit(1)
                 structs[struct_name] = Struct(struct_loc, struct_name, struct_member)
+            elif token.value == Keyword.OFFSETOF:
+                if len(rtokens) == 0:
+                    compiler_error_with_expansion_stack(token, "expected struct name but found nothing")
+                    exit(1)
+                token = rtokens.pop()
+                if token.typ != TokenType.WORD:
+                    compiler_error_with_expansion_stack(token, "expected struct name to be %s but found %s" % (human(TokenType.WORD), human(token.typ)))
+                    exit(1)
+                assert isinstance(token.value, str), "This is probably a bug in the lexer"
+                if token.value in DATATYPES or (token.value in structs and len(structs[token.value].types) <= 1 and structs[token.value].types[0][0] == '<base_type>'):
+                    compiler_error_with_expansion_stack(token, "specified type does not have any members")
+                    exit(1)
+                st = structs[token.value]
+                if len(rtokens) == 0:
+                    compiler_error_with_expansion_stack(token, "expected member name but found nothing")
+                    exit(1)
+                token = rtokens.pop()
+                if token.typ != TokenType.WORD:
+                    compiler_error_with_expansion_stack(token, "expected member name to be %s but found %s" % (human(TokenType.WORD), human(token.typ)))
+                    exit(1)
+                assert isinstance(token.value, str), "This is probably a bug in the lexer"
+                if any(m_name == token.value for m_name, _ in st.types):
+                    
+                else:
+                    compiler_error_with_expansion_stack(token, "member name %s does not exist in struct %s" % (token.value, st.name))
+                    exit(1)
             elif token.value == Keyword.MEMORY:
                 if len(rtokens) == 0:
                     compiler_error_with_expansion_stack(token, "expected alloc name but found nothing")
@@ -2241,7 +2430,18 @@ def lex_lines(file_path: str, lines: List[str]) -> Generator[Token, None, None]:
                 text_of_token = line[col:col_end]
 
                 try:
-                    yield Token(TokenType.INT, text_of_token, loc, int(text_of_token))
+                    i = 0
+                    if text_of_token[:2] == '0x':
+                        i = int(text_of_token[2:], 16)
+                    elif text_of_token[:2] == '0o':
+                        i = int(text_of_token[2:], 8)
+                    elif text_of_token[:2] == '0b':
+                        i = int(text_of_token[2:], 2)
+                    elif text_of_token[:2] == '0d':
+                        i = int(text_of_token[2:])
+                    else:
+                        i = int(text_of_token)
+                    yield Token(TokenType.INT, text_of_token, loc, i)
                 except ValueError:
                     if text_of_token in KEYWORD_NAMES:
                         yield Token(TokenType.KEYWORD, text_of_token, loc, KEYWORD_NAMES[text_of_token])
@@ -2351,7 +2551,7 @@ if __name__ == '__main__' and '__file__' in globals():
     assert len(argv) >= 1
     compiler_name, *argv = argv
 
-    include_paths = ['.', './lib', os.path.expanduser('~') + "/.local/lib/thrust"]
+    include_paths = ['./lib', os.path.expanduser('~') + "/.local/lib/thrust"]
     expansion_limit = DEFAULT_EXPANSION_LIMIT
     unsafe = False
 
@@ -2452,8 +2652,6 @@ if __name__ == '__main__' and '__file__' in globals():
         if basedir == "":
             basedir = os.getcwd()
         basepath = path.join(basedir, basename)
-
-        include_paths.append(path.dirname(program_path))
 
         program, contracts, externs = parse_program_from_file(program_path, include_paths, expansion_limit);
         if control_flow:

@@ -1,0 +1,10 @@
+addin "typ"
+
+struct Str
+	ptr // data
+	isz // len
+end
+
+define .Str
+	
+end

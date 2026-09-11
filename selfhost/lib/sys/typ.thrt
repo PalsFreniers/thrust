@@ -1,0 +1,5 @@
+addin "typ"
+
+alias ptr as cstr
+alias int as fd
+alias int as mode

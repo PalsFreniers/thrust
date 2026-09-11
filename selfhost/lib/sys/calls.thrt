@@ -1,0 +1,17 @@
+addin "./defs"
+addin "./typ"
+
+define _read SYS_READ call3 end
+fn read isz ptr fd -> isz as _read end
+
+define _write SYS_WRITE call3 end
+fn write isz cstr fd -> isz as _write end
+
+define _open SYS_OPEN call3 end
+fn open cstr int mode -> fd as _open end
+
+define _close SYS_CLOSE call1 end
+fn close fd -> code as _close end
+
+define _exit SYS_EXIT call1 end
+fn exit code as _exit _ end
