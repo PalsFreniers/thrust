@@ -1,5 +1,22 @@
 addin "sys"
 
+struct Str
+	isz len
+	ptr data
+end
+
+struct string
+	Str base
+	bool owned
+	isz capacity
+end
+
+assert offsetof Str len 0 = "offset of Str.len should be 0"
+assert offsetof Str data 8 = "offset of Str.data should be 8"
+assert offsetof string base.data 8 = "offset of Str.base.data should be 8"
+assert offsetof string owned 16 = "offset of Str.owned should be 16"
+assert offsetof string capacity 17 = "offset of Str.owned should be 17"
+
 fn main -> int as
 	0
 end

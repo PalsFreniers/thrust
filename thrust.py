@@ -1506,13 +1506,44 @@ def check_valid_symbol(token: Token, name: str, macros: Dict[str, Macro], functi
         compiler_error_with_expansion_stack(token, "redefinition of an intrinsic word `%s`. Please choose a different name for your macro." % (name, ))
         exit(1)
 
-def eval_expression(rtokens: List[Token], macros: Dict[str, Macro], consts: Dict[str, Const], funcs: Dict[str, Function], iota: List[int]) -> Tuple[int, DataType]:
+def eval_expression(rtokens: List[Token], macros: Dict[str, Macro], consts: Dict[str, Const], funcs: Dict[str, Function], structs: Dict[str, Struct], iota: List[int]) -> Tuple[int, DataType]:
     stack: List[Tuple[int, DataType]] = []
     while len(rtokens) > 0:
         token = rtokens.pop()
         if token.typ == TokenType.KEYWORD:
             if token.value == Keyword.END:
                 break
+            elif token.value == Keyword.OFFSETOF:
+                if len(rtokens) == 0:
+                    compiler_error_with_expansion_stack(token, "expected struct name but found nothing")
+                    exit(1)
+                token = rtokens.pop()
+                if token.typ != TokenType.WORD:
+                    compiler_error_with_expansion_stack(token, "expected struct name to be %s but found %s" % (human(TokenType.WORD), human(token.typ)))
+                    exit(1)
+                assert isinstance(token.value, str), "This is probably a bug in the lexer"
+                if token.value in DATATYPES or (token.value in structs and len(structs[token.value].types) <= 1 and structs[token.value].types[0][0] == '<base_type>'):
+                    compiler_error_with_expansion_stack(token, "specified type does not have any members")
+                    exit(1)
+                st = structs[token.value]
+                if len(rtokens) == 0:
+                    compiler_error_with_expansion_stack(token, "expected member name but found nothing")
+                    exit(1)
+                token = rtokens.pop()
+                if token.typ != TokenType.WORD:
+                    compiler_error_with_expansion_stack(token, "expected member name to be %s but found %s" % (human(TokenType.WORD), human(token.typ)))
+                    exit(1)
+                assert isinstance(token.value, str), "This is probably a bug in the lexer"
+                if any(m_name == token.value for m_name, _ in st.types):
+                    acc = 0
+                    for n, t in st.types:
+                        if n == token.value:
+                            break
+                        acc += DATATYPES_SIZE[t]
+                    stack.append((acc, DataType.INT))
+                else:
+                    compiler_error_with_expansion_stack(token, "member name %s does not exist in struct %s" % (token.value, st.name))
+                    exit(1)
             elif token.value == Keyword.OFFSET:
                 if len(stack) < 1:
                     compiler_error_with_expansion_stack(token, f"not enough arguments for `{KEYWORD_NAMES[str(token.value)]}` keyword")
@@ -2195,7 +2226,12 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                     exit(1)
                 assert isinstance(token.value, str), "This is probably a bug in the lexer"
                 if any(m_name == token.value for m_name, _ in st.types):
-                    
+                    acc = 0
+                    for n, t in st.types:
+                        if n == token.value:
+                            break
+                        acc += DATATYPES_SIZE[t]
+                    program.ops.append(Op(typ=OpType.PUSH_INT, token=token, operand=acc))
                 else:
                     compiler_error_with_expansion_stack(token, "member name %s does not exist in struct %s" % (token.value, st.name))
                     exit(1)
@@ -2210,7 +2246,7 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                 assert isinstance(token.value, str), "This is probably a bug in the lexer"
                 memname = token.value
                 memloc = token.loc
-                memsize, mem_size_type = eval_expression(rtokens, macros, consts, functions, iota)
+                memsize, mem_size_type = eval_expression(rtokens, macros, consts, functions, structs, iota)
                 if mem_size_type != DataType.INT:
                     compiler_error_with_expansion_stack(token, f"Memory size must be of type {DataType.INT} but it is of type {mem_size_type}")
                     exit(1)
@@ -2234,7 +2270,7 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                 check_valid_symbol(token, token.value, macros, functions, memories, consts, structs)
                 constname = token.value
                 constloc = token.loc
-                constsize, const_type = eval_expression(rtokens, macros, consts, functions, iota)
+                constsize, const_type = eval_expression(rtokens, macros, consts, functions, structs, iota)
                 consts[constname] = Const(constloc, constsize, const_type)
             elif token.value == Keyword.MACRO:
                 if len(rtokens) == 0:
@@ -2326,7 +2362,7 @@ def parse_program_from_tokens(tokens: List[Token], include_paths: List[str], exp
                     exit(1)
                 assert isinstance(token.value, str), "This is probably a bug in the lexer"
                 assert_message = token.value
-                assert_value, assert_type = eval_expression(rtokens, macros, consts, functions, iota)
+                assert_value, assert_type = eval_expression(rtokens, macros, consts, functions, structs, iota)
                 if assert_type != DataType.BOOL:
                     compiler_error_with_expansion_stack(token, f"assertion body must return type {DataType.INT} but it is of type {assert_type}")
                     exit(1)
